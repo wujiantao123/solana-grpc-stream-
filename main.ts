@@ -3,7 +3,7 @@ import bs58 from 'bs58';
 import { Connection, PublicKey } from '@solana/web3.js';
 const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486", "confirmed");
 const getAddressTransfer = async (address: string) => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000 * 20));
     const signatures = await connection.getSignaturesForAddress(new PublicKey(address), { limit: 1 });
     signatures.forEach(async (signature) => {
       const result = await connection.getParsedTransaction(signature.signature, {
