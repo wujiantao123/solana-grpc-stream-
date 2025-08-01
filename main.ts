@@ -49,7 +49,8 @@ async function main() {
       const accountKeys = result.transaction.transaction.message.accountKeys.map((buffer:Uint8Array | number[]) => bs58.encode(buffer));
       const searchAccount = accountKeys[1]
       const preBalances = result.transaction.meta ? result.transaction.meta.preBalances : [];
-      const balance = preBalances[1] / 10 ** 9;
+      const postBalances = result.transaction.meta ? result.transaction.meta.postBalances : [];
+      const balance = (postBalances[1] - preBalances[1]) / 10 ** 9;
       console.log(`signature: ${signature}, account: ${searchAccount}, balance: ${balance}`);
       if(balance>3&&balance<4){
         getAddressTransfer(searchAccount);
