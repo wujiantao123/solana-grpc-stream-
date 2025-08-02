@@ -39,7 +39,7 @@ const getAddressTransfer = async (address: string) => {
             console.log(`source ${source} transfer ${address} -> ${accountKeys[3]}`, closeBalance, signature.signature);
             if (closeBalance > 3 && closeBalance < 4) {
               try {
-                await sendMessage(`开盘地址\n https://gmgn.ai/sol/address/${accountKeys[3]}\n 资金来源 ${source}`);
+                await sendMessage(`开盘地址${source}\n https://gmgn.ai/sol/address/${accountKeys[3]}\n`);
               } catch (msgError) {
                 console.error(`发送消息失败:`, msgError);
               }
