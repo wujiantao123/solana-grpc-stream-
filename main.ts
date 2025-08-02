@@ -3,6 +3,10 @@ import bs58 from 'bs58';
 import { Connection, PublicKey } from '@solana/web3.js';
 import sendMessage from './sendMessage.js';
 const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486", "confirmed");
+const remark: Record<string, string> = {
+  "CLoqH73WdpQyDwVWuQLVeDBEzXLmRNP2RdPsJXQqtfdp":"dev(资金池2)",
+  "CD3FfFfLuwrs6pK2LgXiMxmtPTGUz1ubxRcCAJCKn3GE":"dev(资金池)",
+}
 const getAddressTransfer = async (address: string) => {
     await new Promise(resolve => setTimeout(resolve, 1000 * 20));
     const signatures = await connection.getSignaturesForAddress(new PublicKey(address), { limit: 1 });
@@ -13,9 +17,10 @@ const getAddressTransfer = async (address: string) => {
       if (result) {
         const accountKeys = result.transaction.message.accountKeys.map(item => item.pubkey.toBase58());
         const closeBalance = result.meta ? result.meta.preBalances[1] / 10 ** 9 : 0;
-        console.log(`transfer ${address} -> ${accountKeys[3]}`, closeBalance, signature.signature);
+        const source = remark[accountKeys[1]] || accountKeys[1];
+        console.log(`source ${source} transfer ${address} -> ${accountKeys[3]}`, closeBalance, signature.signature);
         if (closeBalance > 3 && closeBalance < 4) {
-          await sendMessage(`开盘地址\n https://gmgn.ai/sol/address/${accountKeys[3]}`);
+          await sendMessage(`开盘地址\n https://gmgn.ai/sol/address/${accountKeys[3]}\n 资金来源 ${source}`);
         }
       }
     });
