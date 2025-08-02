@@ -2,28 +2,56 @@ import { subscribe, CommitmentLevel, LaserstreamConfig, SubscribeRequest } from 
 import bs58 from 'bs58';
 import { Connection, PublicKey } from '@solana/web3.js';
 import sendMessage from './sendMessage.js';
-const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486", "confirmed");
+const rpcs = ["http://127.0.0.1:8546","https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486","https://mainnet.helius-rpc.com/?api-key=fa81dd0b-76fc-434b-83d6-48f151e2d3e5"]
+const connections = rpcs.map((rpc) => new Connection(rpc, 'confirmed'));
+const getConnection = () => {
+  const index = Math.floor(Math.random() * connections.length);
+  return connections[index];
+}
 const remark: Record<string, string> = {
-  "CLoqH73WdpQyDwVWuQLVeDBEzXLmRNP2RdPsJXQqtfdp":"dev(资金池2)",
-  "CD3FfFfLuwrs6pK2LgXiMxmtPTGUz1ubxRcCAJCKn3GE":"dev(资金池)",
+  "CD3FfFfLuwrs6pK2LgXiMxmtPTGUz1ubxRcCAJCKn3GE":"dev(资金池) 30%",
+  "CLoqH73WdpQyDwVWuQLVeDBEzXLmRNP2RdPsJXQqtfdp":"dev(资金池2) 30%",
+  "C3DFKdA7WLFoU1ZrDeJobgEKHrBvDo6FifuuHgwDXGkA":"dev(资金池3) 30% 测试",
+  "6wC3QqPtrXtckgPjYaxCfx8aor2KngfyDLzS4gtEoC3G":"dev(资金池4) 30% 测试1",
+  "8gFoTGpLW4PbfMazyZviMcwYXm9KmNWDFHBSsMFYSPof":"dev(资金池5) 30% 测试2",
+  "7Qdy482vsAdqrby7BzY4KFHKRM6LVLQFMK1bXwSS9NAt":"dev(资金池6) 30%",
+  "BKSEQQGCQBZeincv2xQgYVkHv61A6mjsCP6btwqQzkMN":"dev(资金池7) 30% 测试4",
+  "7xPp4XMMt2WUS2rLczX3GuewKdSSmtDY87BPUDM7D7HK":"dev(资金池8) 30% 测试5",
+  "5feFx3tbHW5NDNzTkQcXWHs9HPbKUHpu75LPHGnwPqJB":"dev(资金池9) 30% 测试6",
+  "AWwSN3ZPXvmo4xDMWeHSp2EN7aCu25N6dnE993wJo26k":"dev(资金池10) 30% 测试7",
+  "AH6TpKYoWsT4vyAWWZt5eLAUzGjzLR5fscYjcG6WtfZb":"dev(资金池11) 30% 测试8",
+  "9givWA6Y12bBPXEYv4Zq8wqxS6bog36kCWV49ZabuoEd":"dev(资金池12) 30% 测试9",
+  "J32djC4gWp9VjvhbfvZ8kXdF9aLJ5ERNxn5kxDcm5qQb":"dev(资金池13) 30% 测试10"
 }
 const getAddressTransfer = async (address: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000 * 20));
-    const signatures = await connection.getSignaturesForAddress(new PublicKey(address), { limit: 1 });
-    signatures.forEach(async (signature) => {
-      const result = await connection.getParsedTransaction(signature.signature, {
-        maxSupportedTransactionVersion: 0
-      }); 
-      if (result) {
-        const accountKeys = result.transaction.message.accountKeys.map(item => item.pubkey.toBase58());
-        const closeBalance = result.meta ? result.meta.preBalances[1] / 10 ** 9 : 0;
-        const source = remark[accountKeys[1]] || accountKeys[1];
-        console.log(`source ${source} transfer ${address} -> ${accountKeys[3]}`, closeBalance, signature.signature);
-        if (closeBalance > 3 && closeBalance < 4) {
-          await sendMessage(`开盘地址\n https://gmgn.ai/sol/address/${accountKeys[3]}\n 资金来源 ${source}`);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000 * 22));
+      const signatures = await getConnection().getSignaturesForAddress(new PublicKey(address), { limit: 1 });
+      signatures.forEach(async (signature) => {
+        try {
+          const result = await getConnection().getParsedTransaction(signature.signature, {
+            maxSupportedTransactionVersion: 0
+          }); 
+          if (result) {
+            const accountKeys = result.transaction.message.accountKeys.map(item => item.pubkey.toBase58());
+            const closeBalance = result.meta ? result.meta.preBalances[1] / 10 ** 9 : 0;
+            const source = remark[accountKeys[0]] || accountKeys[0];
+            console.log(`source ${source} transfer ${address} -> ${accountKeys[3]}`, closeBalance, signature.signature);
+            if (closeBalance > 3 && closeBalance < 4) {
+              try {
+                await sendMessage(`开盘地址\n https://gmgn.ai/sol/address/${accountKeys[3]}\n 资金来源 ${source}`);
+              } catch (msgError) {
+                console.error(`发送消息失败:`, msgError);
+              }
+            }
+          }
+        } catch (txError) {
+          console.error(`获取交易详情失败 ${signature.signature}:`, txError);
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error(`获取地址转账记录失败 ${address}:`, error);
+    }
   }
 async function main() {
   const subscriptionRequest: SubscribeRequest = {
@@ -48,22 +76,27 @@ async function main() {
 
   const config: LaserstreamConfig = {
     apiKey: '',
-    endpoint: 'http://84.32.103.140:10040',
+    endpoint: 'http://84.32.103.140:10060',
   }
 
 
   await subscribe(config, subscriptionRequest, async (data) => {
-    const result = data.transaction
-    if(result){
-      // const signature = bs58.encode(result.transaction.signature);
-      const accountKeys = result.transaction.transaction.message.accountKeys.map((buffer:Uint8Array | number[]) => bs58.encode(buffer));
-      const searchAccount = accountKeys[1]
-      // const preBalances = result.transaction.meta ? result.transaction.meta.preBalances : [];
-      // const postBalances = result.transaction.meta ? result.transaction.meta.postBalances : [];
-      getAddressTransfer(searchAccount);
+    try {
+      const result = data.transaction
+      if(result){
+        // const signature = bs58.encode(result.transaction.signature);
+        const accountKeys = result.transaction.transaction.message.accountKeys.map((buffer:Uint8Array | number[]) => bs58.encode(buffer));
+        const searchAccount = accountKeys[1]
+        // const preBalances = result.transaction.meta ? result.transaction.meta.preBalances : [];
+        // const postBalances = result.transaction.meta ? result.transaction.meta.postBalances : [];
+        getAddressTransfer(searchAccount);
+      }
+    } catch (error) {
+      console.error('处理订阅数据时出错:', error);
     }
   }, async (error) => {
-    console.error(error);
+    console.error('订阅错误:', error);
+    // 重新连接逻辑可以在这里添加
   });
 }
 
