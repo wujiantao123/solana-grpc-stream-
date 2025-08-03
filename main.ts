@@ -2,7 +2,7 @@ import { subscribe, CommitmentLevel, LaserstreamConfig, SubscribeRequest } from 
 import bs58 from 'bs58';
 import { Connection, PublicKey } from '@solana/web3.js';
 import sendMessage from './sendMessage.js';
-const rpcs = ["http://127.0.0.1:8546","https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486","https://mainnet.helius-rpc.com/?api-key=fa81dd0b-76fc-434b-83d6-48f151e2d3e5"]
+const rpcs = ["https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490","https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486","https://mainnet.helius-rpc.com/?api-key=fa81dd0b-76fc-434b-83d6-48f151e2d3e5"]
 const connections = rpcs.map((rpc) => new Connection(rpc, 'confirmed'));
 const getConnection = () => {
   const index = Math.floor(Math.random() * connections.length);
@@ -21,7 +21,10 @@ const remark: Record<string, string> = {
   "AWwSN3ZPXvmo4xDMWeHSp2EN7aCu25N6dnE993wJo26k":"dev(资金池10) 30% 测试7",
   "AH6TpKYoWsT4vyAWWZt5eLAUzGjzLR5fscYjcG6WtfZb":"dev(资金池11) 30% 测试8",
   "9givWA6Y12bBPXEYv4Zq8wqxS6bog36kCWV49ZabuoEd":"dev(资金池12) 30% 测试9",
-  "J32djC4gWp9VjvhbfvZ8kXdF9aLJ5ERNxn5kxDcm5qQb":"dev(资金池13) 30% 测试10"
+  "J32djC4gWp9VjvhbfvZ8kXdF9aLJ5ERNxn5kxDcm5qQb":"dev(资金池13) 30% 测试10(会开多盘子第二个后再买)",
+  "JDHShqNLMQtSDix53Njm1mGLM7h1RUPkEAiBswck9u6T":"dev(资金池14) 30% 测试11",
+  "8k6WU2T2Zr27SjrGn7Weuhh7APFYVsZwihWDc569J5Lj":"dev(资金池15) 30%",
+  "5MgaApPAup9nXTf7GPNapQgGRNAaBVewBwjWDXMuXLrq":"dev(资金池16) 30% 测试12"
 }
 const getAddressTransfer = async (address: string) => {
     try {
