@@ -24,7 +24,8 @@ const remark: Record<string, string> = {
   "J32djC4gWp9VjvhbfvZ8kXdF9aLJ5ERNxn5kxDcm5qQb":"dev(资金池13) 30% 测试10(会开多盘子第二个后再买)",
   "JDHShqNLMQtSDix53Njm1mGLM7h1RUPkEAiBswck9u6T":"dev(资金池14) 30% 测试11",
   "8k6WU2T2Zr27SjrGn7Weuhh7APFYVsZwihWDc569J5Lj":"dev(资金池15) 30%",
-  "5MgaApPAup9nXTf7GPNapQgGRNAaBVewBwjWDXMuXLrq":"dev(资金池16) 30% 测试12"
+  "5MgaApPAup9nXTf7GPNapQgGRNAaBVewBwjWDXMuXLrq":"dev(资金池16) 30% 测试12",
+  "HJBRf3mWVx23JDaR53EiKSCit4p2wpuUGJ8dia26Zggv":"dev(资金池17) 30% 测试13(开盘第三笔)"
 }
 const getAddressTransfer = async (address: string) => {
     try {
