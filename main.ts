@@ -35,12 +35,18 @@ const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
   "https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486",
   "https://mainnet.helius-rpc.com/?api-key=fa81dd0b-76fc-434b-83d6-48f151e2d3e5",
+  "https://mainnet.helius-rpc.com/?api-key=14312756-eebe-4d84-9617-59a09fc8c894",
+  "https://mainnet.helius-rpc.com/?api-key=c570abef-cd38-40b5-a7d8-c599769f7309"
 ];
 const connections = rpcs.map((rpc) => new Connection(rpc, "confirmed"));
+let connectionIndex = 0;
+
 const getConnection = () => {
-  const index = Math.floor(Math.random() * connections.length);
-  return connections[index];
+  const connection = connections[connectionIndex];
+  connectionIndex = (connectionIndex + 1) % connections.length;
+  return connection;
 };
+
 
 const remark: Record<string, string> = {
   CD3FfFfLuwrs6pK2LgXiMxmtPTGUz1ubxRcCAJCKn3GE: "dev(资金池)",
@@ -89,7 +95,11 @@ const subscriptionRequest: SubscribeRequest = {
   entry: {},
   accountsDataSlice: [],
 };
-const getAddressTransfer = async (address: string) => {
+const getAddressTransfer = async (address: string, retryCount = 0) => {
+  if(retryCount > 3) {
+    console.error(`重试次数过多，跳过地址: ${address}`);
+    return;
+  }
   if (processedAddresses.has(address)) {
     return;
   }
@@ -121,23 +131,35 @@ const getAddressTransfer = async (address: string) => {
             closeBalance,
             signature.signature
           );
-          if (closeBalance > 3 && closeBalance < 4) {
+          if (
+            (closeBalance > 3 && closeBalance < 3.6) ||
+            (closeBalance > 2 && closeBalance < 2.3)
+          ) {
             const logs: string[] = [];
-            const tasks = sourceAddress[source].map(async (item) => {
+            const tasks = sourceAddress[source].map(async (item, index) => {
               const info = await getAddressHolding(item);
-              const log = `地址${item} 开盘数:${
+              if (!info || info[0] === 0) return null;
+
+              const profitableCount = info[1].filter(
+                (pnl: string) => Number(pnl) > 30
+              ).length;
+              const winRate = ((profitableCount / info[0]) * 100).toFixed(2);
+              const log = `地址 ${item.slice(0, 6)} | 开盘: ${
                 info[0]
-              } 对应盈亏: ${info[1].join(",")} >30%:${
-                info[1].filter((pnl: string) => Number(pnl) > 30).length
-              } 胜率:${(
-                (info[1].filter((pnl: string) => Number(pnl) > 0).length /
-                  info[0]) *
-                100
-              ).toFixed(2)}%`;
-              console.log(log);
-              logs.push(log);
+              } | 盈利: ${profitableCount} | 胜率: ${winRate}% | 盈亏: ${info[1].join(
+                ","
+              )}`;
+              return { index, log };
             });
-            await Promise.all(tasks);
+
+            const results = await Promise.all(tasks);
+            results
+              .filter(
+                (res): res is { index: number; log: string } => res !== null
+              )
+              .sort((a, b) => a.index - b.index)
+              .forEach((res) => logs.push(res.log));
+
             if (sourceAddress[source]) {
               sourceAddress[source].unshift(accountKeys[3]);
               if (sourceAddress[source].length > 10) {
@@ -149,7 +171,7 @@ const getAddressTransfer = async (address: string) => {
             writeFile(filePath, sourceAddress);
             try {
               const finalMessage = [
-                `开盘地址${source}`,
+                `开盘地址(${closeBalance.toFixed(2)} SOL)${source}`,
                 `https://gmgn.ai/sol/address/${accountKeys[3]}`,
                 ...logs,
               ].join("\n");
@@ -160,10 +182,12 @@ const getAddressTransfer = async (address: string) => {
           }
         }
       } catch (txError) {
+        await getAddressTransfer(address, retryCount + 1);
         console.error(`获取交易详情失败 ${signature.signature}:`, txError);
       }
     });
   } catch (error) {
+    
     console.error(`获取地址转账记录失败 ${address}:`, error);
   }
 };
@@ -220,9 +244,12 @@ async function getAddressHolding(wallet: string) {
   });
   const data = await response.json();
   if (!data || !data.data) {
-    return [0, []];
+    return;
   }
   const holdings = data.data.data;
+  if (!holdings || holdings.length === 0) {
+    return;
+  }
   const totalPnl: string[] = [];
   holdings.forEach((item: { realized_pnl: string }) => {
     totalPnl.push(Number(item.realized_pnl).toFixed(2));
