@@ -30,7 +30,12 @@ const readFile = (filePath: string): Record<string, string[]> => {
 };
 const sourceAddress = readFile(filePath);
 const processedAddresses = new Set();
-const endpoints = ["http://84.32.103.140:10040", "http://84.32.103.140:10060"];
+const endpoints = [
+  "http://84.32.103.140:10040",
+  "http://84.32.103.140:10050",
+  "http://84.32.103.140:10060",
+  "http://84.32.103.140:10070"
+];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
   "https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486",
@@ -162,7 +167,7 @@ const getAddressTransfer = async (address: string, retryCount = 0) => {
 
             if (sourceAddress[source]) {
               sourceAddress[source].unshift(accountKeys[3]);
-              if (sourceAddress[source].length > 10) {
+              if (sourceAddress[source].length > 5) {
                 sourceAddress[source].pop();
               }
             } else {
@@ -182,6 +187,7 @@ const getAddressTransfer = async (address: string, retryCount = 0) => {
           }
         }
       } catch (txError) {
+        processedAddresses.delete(address);
         await getAddressTransfer(address, retryCount + 1);
         console.error(`获取交易详情失败 ${signature.signature}:`, txError);
       }
@@ -218,7 +224,7 @@ async function startAllSubscriptions() {
         }
       },
       async (err) => {
-        console.error(`订阅错误 (${endpoint}):`, err);
+        // console.error(`订阅错误 (${endpoint}):`, err);
       }
     );
 
