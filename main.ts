@@ -124,7 +124,7 @@ const getAddressTransfer = async (address: string, retryCount = 0) => {
           }
         );
         if (result) {
-          const accountKeys = result.transaction.message.accountKeys.map(
+          const accountKeys = result.transaction.message.accountKeys?.map(
             (item) => item.pubkey.toBase58()
           );
           const closeBalance = result.meta
@@ -141,7 +141,7 @@ const getAddressTransfer = async (address: string, retryCount = 0) => {
             (closeBalance > 2 && closeBalance < 2.3)
           ) {
             const logs: string[] = [];
-            const tasks = sourceAddress[source].map(async (item, index) => {
+            const tasks = (sourceAddress[source] || []).map(async (item, index) => {
               const info = await getAddressHolding(item);
               if (!info || info[0] === 0) return null;
 
