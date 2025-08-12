@@ -31,17 +31,17 @@ const readFile = (filePath: string): Record<string, string[]> => {
 const sourceAddress = readFile(filePath);
 const processedAddresses = new Set();
 const endpoints = [
+  "http://57.129.64.141:10000",
   "http://84.32.103.140:10040",
-  "http://84.32.103.140:10050",
   "http://84.32.103.140:10060",
-  "http://84.32.103.140:10070"
+  "http://84.32.103.140:10070",
 ];
 const rpcs = [
-  "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
+  // "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
   "https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486",
   "https://mainnet.helius-rpc.com/?api-key=fa81dd0b-76fc-434b-83d6-48f151e2d3e5",
   "https://mainnet.helius-rpc.com/?api-key=14312756-eebe-4d84-9617-59a09fc8c894",
-  "https://mainnet.helius-rpc.com/?api-key=c570abef-cd38-40b5-a7d8-c599769f7309"
+  "https://mainnet.helius-rpc.com/?api-key=c570abef-cd38-40b5-a7d8-c599769f7309",
 ];
 const connections = rpcs.map((rpc) => new Connection(rpc, "confirmed"));
 let connectionIndex = 0;
@@ -51,7 +51,6 @@ const getConnection = () => {
   connectionIndex = (connectionIndex + 1) % connections.length;
   return connection;
 };
-
 
 const remark: Record<string, string> = {
   CD3FfFfLuwrs6pK2LgXiMxmtPTGUz1ubxRcCAJCKn3GE: "dev(资金池)",
@@ -80,6 +79,7 @@ const remark: Record<string, string> = {
   "4gj8Wc3RL4QmXe57yvvHJisALYBGsb2jRX96vvoYLVtv": "dev(资金池22)",
   "9YYoQCGQLfAzU7u5w8PHvrAhZw1dE7Btze2AcJhv3pkg": "dev(资金池23)",
   DDpoyHiPf2YeTA4tC5V6wfMSLyTDNrLgKwQg4JTyBNU2: "dev(资金池24)",
+  "52XgMp5CZxrHnMs8jv6Sm9zKfd8Ne4icXMSmVPhVtjmi": "dev(资金池25)",
 };
 const subscriptionRequest: SubscribeRequest = {
   transactions: {
@@ -100,22 +100,31 @@ const subscriptionRequest: SubscribeRequest = {
   entry: {},
   accountsDataSlice: [],
 };
-const getAddressTransfer = async (address: string, retryCount = 0) => {
-  if(retryCount > 3) {
+const getAddressTransfer = async (
+  address: string,
+  retryCount = 0
+): Promise<void> => {
+  if (retryCount > 3) {
     console.error(`重试次数过多，跳过地址: ${address}`);
     return;
   }
+
   if (processedAddresses.has(address)) {
     return;
   }
+
   processedAddresses.add(address);
+
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1000 * 22));
+    // 等待22秒再发请求
+    await new Promise((resolve) => setTimeout(resolve, 1000 * 30));
+
     const signatures = await getConnection().getSignaturesForAddress(
       new PublicKey(address),
       { limit: 1 }
     );
-    signatures.forEach(async (signature) => {
+
+    for (const signature of signatures) {
       try {
         const result = await getConnection().getParsedTransaction(
           signature.signature,
@@ -123,25 +132,33 @@ const getAddressTransfer = async (address: string, retryCount = 0) => {
             maxSupportedTransactionVersion: 0,
           }
         );
-        if (result) {
-          const accountKeys = result.transaction.message.accountKeys?.map(
-            (item) => item.pubkey.toBase58()
-          );
-          const closeBalance = result.meta
-            ? result.meta.preBalances[1] / 10 ** 9
-            : 0;
-          const source = remark[accountKeys[0]] || accountKeys[0];
-          console.log(
-            `source ${source} transfer ${address} -> ${accountKeys[3]}`,
-            closeBalance,
-            signature.signature
-          );
-          if (
-            (closeBalance > 3 && closeBalance < 3.6) ||
-            (closeBalance > 2 && closeBalance < 2.3)
-          ) {
-            const logs: string[] = [];
-            const tasks = (sourceAddress[source] || []).map(async (item, index) => {
+
+        if (!result) continue;
+
+        const accountKeys = result.transaction.message.accountKeys?.map(
+          (item) => item.pubkey.toBase58()
+        );
+        const closeBalance = result.meta?.preBalances?.[1]
+          ? result.meta.preBalances[1] / 10 ** 9
+          : 0;
+        const source = remark[accountKeys[0]] || accountKeys[0];
+        const destination = accountKeys[3];
+
+        console.log(
+          `source ${source} transfer ${address} -> ${destination}`,
+          closeBalance,
+          signature.signature
+        );
+
+        const isCloseMatch =
+          (closeBalance > 3 && closeBalance < 3.6) ||
+          (closeBalance > 2 && closeBalance < 2.3);
+
+        if (isCloseMatch && destination) {
+          const logs: string[] = [];
+
+          const tasks = (sourceAddress[source] || []).map(
+            async (item, index) => {
               const info = await getAddressHolding(item);
               if (!info || info[0] === 0) return null;
 
@@ -155,46 +172,54 @@ const getAddressTransfer = async (address: string, retryCount = 0) => {
                 ","
               )}`;
               return { index, log };
-            });
-
-            const results = await Promise.all(tasks);
-            results
-              .filter(
-                (res): res is { index: number; log: string } => res !== null
-              )
-              .sort((a, b) => a.index - b.index)
-              .forEach((res) => logs.push(res.log));
-
-            if (sourceAddress[source]) {
-              sourceAddress[source].unshift(accountKeys[3]);
-              if (sourceAddress[source].length > 5) {
-                sourceAddress[source].pop();
-              }
-            } else {
-              sourceAddress[source] = [accountKeys[3]];
             }
-            writeFile(filePath, sourceAddress);
-            try {
-              const finalMessage = [
-                `开盘地址(${closeBalance.toFixed(2)} SOL)${source}`,
-                `https://gmgn.ai/sol/address/${accountKeys[3]}`,
-                ...logs,
-              ].join("\n");
-              await sendMessage(finalMessage);
-            } catch (msgError) {
-              console.error(`发送消息失败:`, msgError);
-            }
+          );
+
+          const results = await Promise.all(tasks);
+          results
+            .filter(
+              (res): res is { index: number; log: string } => res !== null
+            )
+            .sort((a, b) => a.index - b.index)
+            .forEach((res) => logs.push(res.log));
+
+          // 更新 sourceAddress
+          if (!sourceAddress[source]) {
+            sourceAddress[source] = [];
+          }
+
+          sourceAddress[source].unshift(destination); // 新元素放前面
+
+          if (sourceAddress[source].length > 5) {
+            sourceAddress[source].length = 5; // 保留前 5 个
+          }
+
+          // 写入文件（await 保证写入完成）
+          await writeFile(filePath, sourceAddress);
+
+          try {
+            const finalMessage = [
+              `开盘地址(${closeBalance.toFixed(2)} SOL)${source}`,
+              `https://gmgn.ai/sol/address/${destination}`,
+              ...logs,
+            ].join("\n");
+            await sendMessage(finalMessage);
+          } catch (msgError) {
+            console.error(`发送消息失败:`, msgError);
           }
         }
       } catch (txError) {
+        // 出错则移除地址标记并重试
         processedAddresses.delete(address);
-        await getAddressTransfer(address, retryCount + 1);
         console.error(`获取交易详情失败 ${signature.signature}:`, txError);
+        await getAddressTransfer(address, retryCount + 1);
       }
-    });
+    }
   } catch (error) {
-    
+    // 获取签名失败，重试
+    processedAddresses.delete(address);
     console.error(`获取地址转账记录失败 ${address}:`, error);
+    await getAddressTransfer(address, retryCount + 1);
   }
 };
 
@@ -212,6 +237,7 @@ async function startAllSubscriptions() {
         try {
           const result = data.transaction;
           if (result) {
+            console.log(new Date())
             const accountKeys =
               result.transaction.transaction.message.accountKeys.map(
                 (buffer: Uint8Array | number[]) => bs58.encode(buffer)
@@ -224,7 +250,7 @@ async function startAllSubscriptions() {
         }
       },
       async (err) => {
-        // console.error(`订阅错误 (${endpoint}):`, err);
+        console.error(`订阅错误 (${endpoint}):`, err);
       }
     );
 
