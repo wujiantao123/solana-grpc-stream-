@@ -170,7 +170,7 @@ const getAddressTransfer = async (
                 info[0]
               } | 盈利: ${profitableCount} | 胜率: ${winRate}% | 盈亏: ${info[1].join(
                 ","
-              )}`;
+              )}\n https://app.debot.ai/address/solana/${item}`;
               return { index, log };
             }
           );
@@ -200,7 +200,7 @@ const getAddressTransfer = async (
           try {
             const finalMessage = [
               `开盘地址(${closeBalance.toFixed(2)} SOL)${source}`,
-              `https://gmgn.ai/sol/address/${destination}`,
+              `https://app.debot.ai/address/solana/${destination}\n`,
               ...logs,
             ].join("\n");
             await sendMessage(finalMessage);

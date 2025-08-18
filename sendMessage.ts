@@ -6,7 +6,7 @@ const sendMessage = async (msg: string) => {
       {
         msgtype: "text",
         text: {
-          content: `ca: ${msg} -> ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`,
+          content: `ca: ${msg} \n${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`,
         },
         at: {
           isAtAll: true,
