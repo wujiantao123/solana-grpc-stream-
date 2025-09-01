@@ -32,9 +32,9 @@ const sourceAddress = readFile(filePath);
 const processedAddresses = new Set();
 const endpoints = [
   "http://57.129.64.141:10000",
-  "http://84.32.103.140:10040",
-  "http://84.32.103.140:10060",
-  "http://84.32.103.140:10070",
+  // "http://84.32.103.140:10040",
+  // "http://84.32.103.140:10060",
+  // "http://84.32.103.140:10070",
 ];
 const rpcs = [
   // "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
@@ -80,11 +80,13 @@ const remark: Record<string, string> = {
   "9YYoQCGQLfAzU7u5w8PHvrAhZw1dE7Btze2AcJhv3pkg": "dev(资金池23)",
   DDpoyHiPf2YeTA4tC5V6wfMSLyTDNrLgKwQg4JTyBNU2: "dev(资金池24)",
   "52XgMp5CZxrHnMs8jv6Sm9zKfd8Ne4icXMSmVPhVtjmi": "dev(资金池25)",
+  "GszWYc6xAZNbXL3cnZYEJJFy6takMX52S9kQ43xGTmpQ":"捆绑忽略",
+  "2xeRRqg2kbw7PrBGaVfYvmmr9VeetTTtCwmT9AqneaY4":"eaY4有点格局",
 };
 const subscriptionRequest: SubscribeRequest = {
   transactions: {
     client: {
-      accountInclude: ["BjuD62v9RysrburpKb65UKeaAWRSFyi7pFLLxdE3dPv"],
+      accountInclude: ["BjuD62v9RysrburpKb65UKeaAWRSFyi7pFLLxdE3dPv","TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM"],
       accountExclude: [],
       accountRequired: [],
       vote: false,
@@ -170,7 +172,7 @@ const getAddressTransfer = async (
                 info[0]
               } | 盈利: ${profitableCount} | 胜率: ${winRate}% | 盈亏: ${info[1].join(
                 ","
-              )}\n https://app.debot.ai/address/solana/${item}`;
+              )}\n https://gmgn.ai/sol/address/${item}`;
               return { index, log };
             }
           );
@@ -200,7 +202,7 @@ const getAddressTransfer = async (
           try {
             const finalMessage = [
               `开盘地址(${closeBalance.toFixed(2)} SOL)${source}`,
-              `https://app.debot.ai/address/solana/${destination}\n`,
+              `https://gmgn.ai/sol/address/${destination}\n`,
               ...logs,
             ].join("\n");
             await sendMessage(finalMessage);

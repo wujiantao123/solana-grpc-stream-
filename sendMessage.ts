@@ -1,17 +1,17 @@
 import axios from "axios";
 const sendMessage = async (msg: string) => {
   const postMessage = async () => {
+    const req = {
+      msg_type: "text",
+      content: JSON.stringify({
+        text: `ca: ${msg} \n${new Date().toLocaleString("zh-CN", {
+          timeZone: "Asia/Shanghai",
+        })}`,
+      }),
+    };
     await axios.post(
-      "https://oapi.dingtalk.com/robot/send?access_token=fa880f50eac31be9ab61f19b01a7644a9f16f19bb454055c4f5b9ddb643e9d89",
-      {
-        msgtype: "text",
-        text: {
-          content: `ca: ${msg} \n${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`,
-        },
-        at: {
-          isAtAll: true,
-        },
-      }
+      "https://open.feishu.cn/open-apis/bot/v2/hook/48efcce6-6b52-456f-859b-891446fb2995",
+      req
     );
   };
 
