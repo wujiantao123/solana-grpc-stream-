@@ -165,6 +165,7 @@ async function startAllSubscriptions() {
                 console.log(
                   `⚡ 触发跟单逻辑: ${addr} 在第 ${followConfigs[addr].target} 次交易`
                 );
+                addCopy(addr)
                 // TODO: 在这里写你的跟单逻辑
               }
             }
