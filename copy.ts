@@ -188,7 +188,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/add", (req: Request, res: Response) => {
+app.post("/testapi/add", (req: Request, res: Response) => {
   const { address, times } = req.body;
   if (!address || !times)
     return res.status(400).json({ error: "需要 address 和 times" });
@@ -205,7 +205,7 @@ app.post("/add", (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-app.post("/remove", (req: Request, res: Response) => {
+app.post("/testapi/remove", (req: Request, res: Response) => {
   const { address } = req.body;
   if (!address || !followConfigs[address])
     return res.status(400).json({ error: "地址不存在" });
@@ -216,7 +216,7 @@ app.post("/remove", (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-app.get("/list", (_req: Request, res: Response) => {
+app.get("/testapi/list", (_req: Request, res: Response) => {
   res.json(followConfigs);
 });
 app.listen(8125, () => console.log("监听 /add /remove 接口在 8125 端口"));
