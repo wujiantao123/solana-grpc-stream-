@@ -63,7 +63,7 @@ const addCopy = async (address: string) => {
     onlySell: false,
     priorityFee: 10000000,
     priorityFeeSell: 1000000,
-    pumpfunSlippageTimes: 40,
+    pumpfunSlippageTimes: 15,
     ratio: 100,
     retryTimes: 0,
     sellByPositionProportion: true,
