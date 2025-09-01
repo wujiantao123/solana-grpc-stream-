@@ -86,7 +86,7 @@ const remark: Record<string, string> = {
 const subscriptionRequest: SubscribeRequest = {
   transactions: {
     client: {
-      accountInclude: ["BjuD62v9RysrburpKb65UKeaAWRSFyi7pFLLxdE3dPv","TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM"],
+      accountInclude: ["BjuD62v9RysrburpKb65UKeaAWRSFyi7pFLLxdE3dPv"],
       accountExclude: [],
       accountRequired: [],
       vote: false,
@@ -203,6 +203,7 @@ const getAddressTransfer = async (
             const finalMessage = [
               `开盘地址(${closeBalance.toFixed(2)} SOL)${source}`,
               `https://gmgn.ai/sol/address/${destination}\n`,
+              `https://webtest.tradewiz.trade/copy.html?address=${destination}\n`,
               ...logs,
             ].join("\n");
             await sendMessage(finalMessage);

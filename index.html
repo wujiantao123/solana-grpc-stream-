@@ -87,7 +87,6 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert('Added successfully');
                 loadList();
                 document.getElementById('addAddress').value = '';
                 document.getElementById('addTimes').value = '';
@@ -104,7 +103,6 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert(`Deleted: ${address}`);
                 loadList();
             } else {
                 alert(data.error);
@@ -119,17 +117,28 @@
             for (const addr in data) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-        <td>${addr}</td>
-        <td>${data[addr].target}</td>
-        <td>${data[addr].count}</td>
-        <td><button class="delete-btn" onclick="removeFollow('${addr}')">Delete</button></td>
-      `;
+                    <td>${addr}</td>
+                    <td>${data[addr].target}</td>
+                    <td>${data[addr].count}</td>
+                    <td><button class="delete-btn" onclick="removeFollow('${addr}')">Delete</button></td>
+                `;
                 tbody.appendChild(row);
             }
         }
 
-        window.onload = loadList;
+        window.onload = () => {
+            // 解析 URL 参数
+            const params = new URLSearchParams(window.location.search);
+            const addressParam = params.get('address');
+            if (addressParam) {
+                document.getElementById('addAddress').value = addressParam;
+            }
+
+            // 加载列表
+            loadList();
+        };
     </script>
+
 
 </body>
 
