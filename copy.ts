@@ -7,6 +7,8 @@ import {
   LaserstreamConfig,
   SubscribeRequest,
 } from "helius-laserstream";
+import { Request, Response } from "express";
+import cors from "cors";
 import bs58 from "bs58";
 
 const endpoints = ["http://57.129.64.141:10000"];
@@ -183,9 +185,8 @@ loadCache();
 startAllSubscriptions().catch(console.error);
 
 const app = express();
+app.use(cors());
 app.use(express.json());
-
-import { Request, Response } from "express";
 
 app.post("/add", (req: Request, res: Response) => {
   const { address, times } = req.body;

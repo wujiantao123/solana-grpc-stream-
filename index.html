@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Follow Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        input,
+        button {
+            padding: 5px;
+            margin: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        button.delete-btn {
+            background: #ff4d4f;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Follow Management</h1>
+
+    <div>
+        <h3>Add Follow Address</h3>
+        <input type="text" id="addAddress" placeholder="Address">
+        <input type="number" id="addTimes" placeholder="Times" min="1">
+        <button onclick="addFollow()">Add</button>
+    </div>
+
+    <div>
+        <h3>Current Follow List</h3>
+        <button onclick="loadList()">Refresh List</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Address</th>
+                    <th>Target Times</th>
+                    <th>Completed Times</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="followList"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_BASE = 'http://84.32.103.140:8125';
+
+        async function addFollow() {
+            const address = document.getElementById('addAddress').value;
+            const times = document.getElementById('addTimes').value;
+            if (!address || !times) return alert('Please enter address and times');
+
+            const res = await fetch(`${API_BASE}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, times: Number(times) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Added successfully');
+                loadList();
+                document.getElementById('addAddress').value = '';
+                document.getElementById('addTimes').value = '';
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function removeFollow(address) {
+            const res = await fetch(`${API_BASE}/remove`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Deleted: ${address}`);
+                loadList();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function loadList() {
+            const res = await fetch(`${API_BASE}/list`);
+            const data = await res.json();
+            const tbody = document.getElementById('followList');
+            tbody.innerHTML = '';
+            for (const addr in data) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+        <td>${addr}</td>
+        <td>${data[addr].target}</td>
+        <td>${data[addr].count}</td>
+        <td><button class="delete-btn" onclick="removeFollow('${addr}')">Delete</button></td>
+      `;
+                tbody.appendChild(row);
+            }
+        }
+
+        window.onload = loadList;
+    </script>
+
+</body>
+
+</html>
