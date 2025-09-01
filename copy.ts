@@ -96,7 +96,7 @@ const addCopy = async (address: string) => {
     activeStartTime: -1,
     activeEndTime: -1,
   };
-  const response = await axios.post(
+  await axios.post(
     "https://copy.fastradewiz.com/api/v1/upsertCopyTrading",
     data,
     {
@@ -106,7 +106,6 @@ const addCopy = async (address: string) => {
       },
     }
   );
-  console.log(response);
 };
 const baseSubscription: SubscribeRequest = {
   transactions: {
