@@ -145,6 +145,10 @@ const getAddressTransfer = async (
           : 0;
         const source = remark[accountKeys[0]] || accountKeys[0];
         const destination = accountKeys[3];
+        if(source==="7b7Z151qvtCck1ChqX9yNuM2YBkeJPMj2FBcHXGQFkj9"){
+          console.log("忽略会是多个 后续在研究")
+          return;
+        }
 
         console.log(
           `source ${source} transfer ${address} -> ${destination}`,
