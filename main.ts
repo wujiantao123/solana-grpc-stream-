@@ -80,8 +80,8 @@ const remark: Record<string, string> = {
   "9YYoQCGQLfAzU7u5w8PHvrAhZw1dE7Btze2AcJhv3pkg": "dev(资金池23)",
   DDpoyHiPf2YeTA4tC5V6wfMSLyTDNrLgKwQg4JTyBNU2: "dev(资金池24)",
   "52XgMp5CZxrHnMs8jv6Sm9zKfd8Ne4icXMSmVPhVtjmi": "dev(资金池25)",
-  "GszWYc6xAZNbXL3cnZYEJJFy6takMX52S9kQ43xGTmpQ":"捆绑忽略",
-  "2xeRRqg2kbw7PrBGaVfYvmmr9VeetTTtCwmT9AqneaY4":"eaY4有点格局",
+  GszWYc6xAZNbXL3cnZYEJJFy6takMX52S9kQ43xGTmpQ: "捆绑忽略",
+  "2xeRRqg2kbw7PrBGaVfYvmmr9VeetTTtCwmT9AqneaY4": "eaY4有点格局",
 };
 const subscriptionRequest: SubscribeRequest = {
   transactions: {
@@ -145,8 +145,8 @@ const getAddressTransfer = async (
           : 0;
         const source = remark[accountKeys[0]] || accountKeys[0];
         const destination = accountKeys[3];
-        if(source==="7b7Z151qvtCck1ChqX9yNuM2YBkeJPMj2FBcHXGQFkj9"){
-          console.log("忽略会是多个 后续在研究")
+        if (source === "7b7Z151qvtCck1ChqX9yNuM2YBkeJPMj2FBcHXGQFkj9") {
+          console.log("忽略会是多个 后续在研究");
           return;
         }
 
@@ -244,7 +244,7 @@ async function startAllSubscriptions() {
         try {
           const result = data.transaction;
           if (result) {
-            console.log(new Date())
+            console.log(new Date());
             const accountKeys =
               result.transaction.transaction.message.accountKeys.map(
                 (buffer: Uint8Array | number[]) => bs58.encode(buffer)
