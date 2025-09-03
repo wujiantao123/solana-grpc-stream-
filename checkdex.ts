@@ -84,7 +84,7 @@
               console.log(isNew,accountKeys[1])
               if (isNew) {
                 const finalMessage = [
-                  `新钱包地址(${transferAmountSol} SOL)${accountKeys[1]} 来源${source[accountKeys[0]]}`,
+                  `新钱包地址(${transferAmountSol} SOL) 来源${source[accountKeys[0]]}`,
                   `https://gmgn.ai/sol/address/${accountKeys[1]}\n`,
                   `https://webtest.tradewiz.trade/copy.html?address=${accountKeys[1]}\n`,
                 ].join("\n");
@@ -109,3 +109,4 @@
   }, 1000 * 60 * 5);
 
   startAllSubscriptions().catch(console.error);
+
