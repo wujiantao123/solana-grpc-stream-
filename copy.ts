@@ -10,10 +10,31 @@ import {
 import { Request, Response } from "express";
 import cors from "cors";
 import bs58 from "bs58";
+import { Connection, PublicKey } from "@solana/web3.js";
+import sendMessage from "./sendMessage";
 
 const endpoints = ["http://57.129.64.141:10000"];
 const CACHE_FILE = "./followConfigs.json";
+const WALLET_STATS_FILE = "./walletStats.json";
 
+const source: { [address: string]: string } = {
+  DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo: "Coinbase Hot Wallet 4",
+  "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9": "Binance 2",
+};
+const rpcs = [
+  "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
+  "https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486",
+  "https://mainnet.helius-rpc.com/?api-key=fa81dd0b-76fc-434b-83d6-48f151e2d3e5",
+  "https://mainnet.helius-rpc.com/?api-key=14312756-eebe-4d84-9617-59a09fc8c894",
+  "https://mainnet.helius-rpc.com/?api-key=c570abef-cd38-40b5-a7d8-c599769f7309",
+];
+const connections = rpcs.map((rpc) => new Connection(rpc, "confirmed"));
+let connectionIndex = 0;
+const getConnection = () => {
+  const connection = connections[connectionIndex];
+  connectionIndex = (connectionIndex + 1) % connections.length;
+  return connection;
+};
 // 记录需要跟单的用户配置：{ [address]: { target: number, count: number } }
 let followConfigs: Record<string, { target: number; count: number }> = {};
 
@@ -107,12 +128,23 @@ const addCopy = async (address: string) => {
     }
   );
 };
+
+async function isNewWallet(address: string) {
+  const pubkey = new PublicKey(address);
+  const accountInfo = await getConnection().getAccountInfo(pubkey);
+  return accountInfo === null;
+}
+
 const baseSubscription: SubscribeRequest = {
   transactions: {
     client: {
-      accountInclude: [],
+      accountInclude: [
+        "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
+        "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+        "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
+      ],
       accountExclude: [],
-      accountRequired: ["TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM"],
+      accountRequired: [],
       vote: false,
       failed: false,
     },
@@ -126,7 +158,24 @@ const baseSubscription: SubscribeRequest = {
   entry: {},
   accountsDataSlice: [],
 };
+// ----------------- 新钱包统计逻辑 -----------------
+interface WalletStats {
+  isNew: boolean;
+  transfers: number;
+  launches: number;
+}
 
+let walletStats: Record<string, WalletStats> = {};
+
+function loadWalletStats() {
+  if (fs.existsSync(WALLET_STATS_FILE)) {
+    walletStats = JSON.parse(fs.readFileSync(WALLET_STATS_FILE, "utf-8"));
+    console.log("✅ 新钱包缓存已加载:", walletStats);
+  }
+}
+function saveWalletStats() {
+  fs.writeFileSync(WALLET_STATS_FILE, JSON.stringify(walletStats, null, 2));
+}
 async function startAllSubscriptions() {
   for (const endpoint of endpoints) {
     const config: LaserstreamConfig = {
@@ -147,25 +196,63 @@ async function startAllSubscriptions() {
             result.transaction.transaction.message.accountKeys.map(
               (b: Uint8Array | number[]) => bs58.encode(b)
             );
-
-          // 遍历检查是否有需要跟单的地址
-          for (const addr of accountKeys) {
-            if (followConfigs[addr]) {
-              followConfigs[addr].count += 1;
-              console.log(
-                `监听到 ${addr} 的第 ${followConfigs[addr].count} 次交易: ${hash}`
-              );
-              // 保存缓存
-              saveCache();
-              if (
-                followConfigs[addr].count ===
-                followConfigs[addr].target - 1
-              ) {
+          if (
+            accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")
+          ) {
+            // 遍历检查是否有需要跟单的地址
+            for (const addr of accountKeys) {
+              if (followConfigs[addr]) {
+                followConfigs[addr].count += 1;
                 console.log(
-                  `⚡ 触发跟单逻辑: ${addr} 在第 ${followConfigs[addr].target} 次交易`
+                  `监听到 ${addr} 的第 ${followConfigs[addr].count} 次交易: ${hash}`
                 );
-                addCopy(addr)
-                // TODO: 在这里写你的跟单逻辑
+                // 保存缓存
+                saveCache();
+                if (
+                  followConfigs[addr].count ===
+                  followConfigs[addr].target - 1
+                ) {
+                  console.log(
+                    `⚡ 触发跟单逻辑: ${addr} 在第 ${followConfigs[addr].target} 次交易`
+                  );
+                  addCopy(addr);
+                }
+              }
+              // 如果是新钱包，统计开盘交易
+              if (walletStats[addr]?.isNew) {
+                walletStats[addr].launches++;
+                saveWalletStats();
+                const { transfers, launches } = walletStats[addr];
+                const ratio = launches / (transfers + launches);
+                console.log(`钱包 ${addr} 占比 = ${ratio.toFixed(2)}`);
+              }
+            }
+          } else {
+            const transferAmount =
+              Number(result.transaction.meta.preBalances[0]) -
+              Number(result.transaction.meta.postBalances[0]);
+            const transferAmountSol = transferAmount / 10 ** 9;
+            const toAddr = accountKeys[1];
+
+            if (transferAmountSol > 0.3 && transferAmountSol < 3.1) {
+              const isNew = await isNewWallet(toAddr);
+              if (isNew) {
+                if (!walletStats[toAddr]) {
+                  walletStats[toAddr] = {
+                    isNew: true,
+                    transfers: 0,
+                    launches: 0,
+                  };
+                }
+                walletStats[toAddr].transfers++;
+                saveWalletStats();
+                const msg = [
+                  `新钱包地址(${transferAmountSol} SOL) 来源${source[accountKeys[0]]}`,
+                  `https://gmgn.ai/sol/address/${toAddr}`,
+                  `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
+                ].join("\n");
+                await sendMessage(msg);
+                console.log(`新钱包发现: ${toAddr}`);
               }
             }
           }
@@ -182,6 +269,7 @@ async function startAllSubscriptions() {
 }
 
 loadCache();
+loadWalletStats();
 startAllSubscriptions().catch(console.error);
 
 const app = express();

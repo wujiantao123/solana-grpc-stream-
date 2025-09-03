@@ -108,5 +108,10 @@
     processedAddresses.clear();
   }, 1000 * 60 * 5);
 
-  startAllSubscriptions().catch(console.error);
+  // startAllSubscriptions().catch(console.error);
+const main = async ()=>{
+  console.log(await isNewWallet("7YuzRvzAHwhqdm9ALqd21dcabhNxUeTWR26wtChRSLjq"))
+}
+main()
+
 
