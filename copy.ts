@@ -1,26 +1,23 @@
 import fs from "fs";
-import express from "express";
+import express, { Request, Response } from "express";
 import axios from "axios";
+import cors from "cors";
+import bs58 from "bs58";
+import { Connection, PublicKey } from "@solana/web3.js";
 import {
   subscribe,
   CommitmentLevel,
   LaserstreamConfig,
   SubscribeRequest,
 } from "helius-laserstream";
-import { Request, Response } from "express";
-import cors from "cors";
-import bs58 from "bs58";
-import { Connection, PublicKey } from "@solana/web3.js";
-import sendMessage from "./sendMessage";
+import sendMessage from "./sendMessage.js";
 
-const endpoints = ["http://57.129.64.141:10000"];
+// ----------------- 配置 -----------------
 const CACHE_FILE = "./followConfigs.json";
 const WALLET_STATS_FILE = "./walletStats.json";
+const PORT = 8125;
 
-const source: { [address: string]: string } = {
-  DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo: "Coinbase Hot Wallet 4",
-  "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9": "Binance 2",
-};
+const endpoints = ["http://57.129.64.141:10000"];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
   "https://mainnet.helius-rpc.com/?api-key=c64adbb9-8f0e-48b5-8690-a4d8bb4e5486",
@@ -31,26 +28,39 @@ const rpcs = [
 const connections = rpcs.map((rpc) => new Connection(rpc, "confirmed"));
 let connectionIndex = 0;
 const getConnection = () => {
-  const connection = connections[connectionIndex];
+  const conn = connections[connectionIndex];
   connectionIndex = (connectionIndex + 1) % connections.length;
-  return connection;
+  return conn;
 };
-// 记录需要跟单的用户配置：{ [address]: { target: number, count: number } }
-let followConfigs: Record<string, { target: number; count: number }> = {};
 
-// 读取缓存
+// 来源钱包标注
+const source: Record<string, string> = {
+  DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo: "Coinbase Hot Wallet 4",
+  "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9": "Binance 2",
+};
+
+// ----------------- 数据缓存 -----------------
+let followConfigs: Record<string, { target: number; count: number }> = {};
+let walletStats: Record<string, { isNew: boolean; transfers: number; launches: number }> = {};
+
 function loadCache() {
   if (fs.existsSync(CACHE_FILE)) {
     followConfigs = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
-    console.log("✅ 跟单地址缓存已加载:", followConfigs);
   }
 }
-
-// 保存缓存
 function saveCache() {
   fs.writeFileSync(CACHE_FILE, JSON.stringify(followConfigs, null, 2));
 }
+function loadWalletStats() {
+  if (fs.existsSync(WALLET_STATS_FILE)) {
+    walletStats = JSON.parse(fs.readFileSync(WALLET_STATS_FILE, "utf-8"));
+  }
+}
+function saveWalletStats() {
+  fs.writeFileSync(WALLET_STATS_FILE, JSON.stringify(walletStats, null, 2));
+}
 
+// ----------------- 工具函数 -----------------
 const addCopy = async (address: string) => {
   const data = {
     tag: `auto:${address.slice(0, 8)}`,
@@ -130,11 +140,12 @@ const addCopy = async (address: string) => {
 };
 
 async function isNewWallet(address: string) {
-  const pubkey = new PublicKey(address);
+    const pubkey = new PublicKey(address);
   const accountInfo = await getConnection().getAccountInfo(pubkey);
   return accountInfo === null;
 }
 
+// ----------------- 订阅逻辑 -----------------
 const baseSubscription: SubscribeRequest = {
   transactions: {
     client: {
@@ -150,161 +161,101 @@ const baseSubscription: SubscribeRequest = {
     },
   },
   commitment: CommitmentLevel.CONFIRMED,
-  accounts: {},
-  slots: {},
-  transactionsStatus: {},
-  blocks: {},
-  blocksMeta: {},
-  entry: {},
-  accountsDataSlice: [],
 };
-// ----------------- 新钱包统计逻辑 -----------------
-interface WalletStats {
-  isNew: boolean;
-  transfers: number;
-  launches: number;
-}
 
-let walletStats: Record<string, WalletStats> = {};
+async function handleTransaction(result: any, endpoint: string) {
+  if (!result?.transaction) return;
 
-function loadWalletStats() {
-  if (fs.existsSync(WALLET_STATS_FILE)) {
-    walletStats = JSON.parse(fs.readFileSync(WALLET_STATS_FILE, "utf-8"));
-    console.log("✅ 新钱包缓存已加载:", walletStats);
+  const hash = bs58.encode(Buffer.from(result.transaction.signature));
+  const accountKeys = result.transaction.transaction.message.accountKeys.map(
+    (b: Uint8Array | number[]) => bs58.encode(b)
+  );
+
+  // case1: 开盘监听
+  if (accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")) {
+    for (const addr of accountKeys) {
+      if (followConfigs[addr]) {
+        followConfigs[addr].count++;
+        saveCache();
+        if (followConfigs[addr].count === followConfigs[addr].target - 1) {
+          await addCopy(addr);
+        }
+      }
+      if (walletStats[addr]?.isNew) {
+        walletStats[addr].launches++;
+        saveWalletStats();
+      }
+    }
+    return;
+  }
+
+  // case2: 转账监听
+  const pre = Number(result.transaction.meta.preBalances[0]);
+  const post = Number(result.transaction.meta.postBalances[0]);
+  const transferAmountSol = (pre - post) / 1e9;
+
+  if (transferAmountSol > 0.3 && transferAmountSol < 3.1) {
+    const toAddr = accountKeys[1]; // TODO: 建议用 instruction 确认
+    if (await isNewWallet(toAddr)) {
+      walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
+      walletStats[toAddr].transfers++;
+      saveWalletStats();
+      const msg = [
+        `新钱包(${transferAmountSol} SOL) 来源 ${source[accountKeys[0]]}`,
+        `https://gmgn.ai/sol/address/${toAddr}`,
+        `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
+      ].join("\n");
+      await sendMessage(msg);
+    }
   }
 }
-function saveWalletStats() {
-  fs.writeFileSync(WALLET_STATS_FILE, JSON.stringify(walletStats, null, 2));
-}
+
 async function startAllSubscriptions() {
   for (const endpoint of endpoints) {
-    const config: LaserstreamConfig = {
-      apiKey: "",
-      endpoint,
-    };
+    const config: LaserstreamConfig = { apiKey: "", endpoint };
 
     await subscribe(
       config,
       baseSubscription,
-      async (data) => {
-        try {
-          const result = data.transaction;
-          if (!result?.transaction) return;
-
-          const hash = bs58.encode(Buffer.from(result.transaction.signature));
-          const accountKeys =
-            result.transaction.transaction.message.accountKeys.map(
-              (b: Uint8Array | number[]) => bs58.encode(b)
-            );
-          if (
-            accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")
-          ) {
-            // 遍历检查是否有需要跟单的地址
-            for (const addr of accountKeys) {
-              if (followConfigs[addr]) {
-                followConfigs[addr].count += 1;
-                console.log(
-                  `监听到 ${addr} 的第 ${followConfigs[addr].count} 次交易: ${hash}`
-                );
-                // 保存缓存
-                saveCache();
-                if (
-                  followConfigs[addr].count ===
-                  followConfigs[addr].target - 1
-                ) {
-                  console.log(
-                    `⚡ 触发跟单逻辑: ${addr} 在第 ${followConfigs[addr].target} 次交易`
-                  );
-                  addCopy(addr);
-                }
-              }
-              // 如果是新钱包，统计开盘交易
-              if (walletStats[addr]?.isNew) {
-                walletStats[addr].launches++;
-                saveWalletStats();
-                const { transfers, launches } = walletStats[addr];
-                const ratio = launches / (transfers + launches);
-                console.log(`钱包 ${addr} 占比 = ${ratio.toFixed(2)}`);
-              }
-            }
-          } else {
-            const transferAmount =
-              Number(result.transaction.meta.preBalances[0]) -
-              Number(result.transaction.meta.postBalances[0]);
-            const transferAmountSol = transferAmount / 10 ** 9;
-            const toAddr = accountKeys[1];
-
-            if (transferAmountSol > 0.3 && transferAmountSol < 3.1) {
-              const isNew = await isNewWallet(toAddr);
-              if (isNew) {
-                if (!walletStats[toAddr]) {
-                  walletStats[toAddr] = {
-                    isNew: true,
-                    transfers: 0,
-                    launches: 0,
-                  };
-                }
-                walletStats[toAddr].transfers++;
-                saveWalletStats();
-                const msg = [
-                  `新钱包地址(${transferAmountSol} SOL) 来源${source[accountKeys[0]]}`,
-                  `https://gmgn.ai/sol/address/${toAddr}`,
-                  `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
-                ].join("\n");
-                await sendMessage(msg);
-                console.log(`新钱包发现: ${toAddr}`);
-              }
-            }
-          }
-        } catch (err) {
-          console.error(`处理订阅数据失败 (${endpoint}):`, err);
-        }
-      },
-      async (err) => {
-        console.error(`订阅错误 (${endpoint}):`, err);
-      }
+      (data) => handleTransaction(data.transaction, endpoint).catch(console.error),
+      (err) => console.error(`订阅错误 (${endpoint}):`, err)
     );
-    console.log(`已连接 Laserstream 节点: ${endpoint}`);
+
+    console.log(`✅ 已连接 Laserstream 节点: ${endpoint}`);
   }
 }
 
-loadCache();
-loadWalletStats();
-startAllSubscriptions().catch(console.error);
-
+// ----------------- HTTP API -----------------
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.post("/testapi/add", (req: Request, res: Response) => {
   const { address, times } = req.body;
-  if (!address || !times)
-    return res.status(400).json({ error: "需要 address 和 times" });
+  if (!address || !times) return res.status(400).json({ error: "缺少参数" });
 
-  followConfigs[address] = {
-    target: times,
-    count: followConfigs[address]?.count || 0,
-  };
+  followConfigs[address] = { target: times, count: followConfigs[address]?.count || 0 };
   saveCache();
-  console.log(`✅ 已添加跟单地址: ${address}, 目标次数: ${times}`);
-  if (times <= 1) {
-    addCopy(address).catch(console.error);
-  }
+  if (times <= 1) addCopy(address).catch(console.error);
+
   res.json({ success: true });
 });
 
 app.post("/testapi/remove", (req: Request, res: Response) => {
   const { address } = req.body;
-  if (!address || !followConfigs[address])
-    return res.status(400).json({ error: "地址不存在" });
+  if (!address || !followConfigs[address]) return res.status(400).json({ error: "地址不存在" });
 
   delete followConfigs[address];
   saveCache();
-  console.log(`🗑 已删除跟单地址: ${address}`);
   res.json({ success: true });
 });
 
 app.get("/testapi/list", (_req: Request, res: Response) => {
   res.json(followConfigs);
 });
-app.listen(8125, () => console.log("监听 /add /remove 接口在 8125 端口"));
+
+// ----------------- 启动 -----------------
+loadCache();
+loadWalletStats();
+startAllSubscriptions().catch(console.error);
+app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
