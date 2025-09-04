@@ -74,16 +74,16 @@ function saveWalletStats() {
 const addCopy = async (address: string) => {
   const data = {
     tag: `${source[address]}_${address.slice(0,4)}`,
-    target: {address},
+    target: address,
     autoSell: true,
-    autoSellParams: '{"settings":{"3500":10000,"-800":10000}}',
+    autoSellParams: '{"settings":{"2000":3000,"3500":7000,"-800":10000}}',
     autoSellTime: 0,
     buyTimes: 1,
     buyTimesResetAfterSold: true,
     copySell: true,
     enableMev: 0,
     enableMevSell: 0,
-    enableTrailingStop: true,
+    enableTrailingStop: false,
     enableTurbo: false,
     enabled: false,
     firstSellPercent: 0,
@@ -365,7 +365,8 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 });
 
 // ----------------- 启动 -----------------
-loadCache();
-loadWalletStats();
-startAllSubscriptions().catch(console.error);
-app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+// loadCache();
+// loadWalletStats();
+// startAllSubscriptions().catch(console.error);
+// app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+addCopy("2FgvYiJSZLFmJcZhAePZFwASVAvLaEvdz1RzzGb6uDUR").catch(console.error);
