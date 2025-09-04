@@ -107,7 +107,6 @@ const addCopy = async (address: string) => {
         { reduce_stock: 30, profit_percent: 15, stop_loss_percent: 10 },
       ],
       transation_sell: { tip: 0.0002, service: "ZeroSlot", priority_fee: 1 },
-      is_active: true,
     },
     is_active: true,
     updated_at: new Date().toISOString(),
@@ -281,7 +280,7 @@ async function handleTransaction(result: any) {
         walletStats[toAddr].transfers++;
         saveWalletStats();
         if (tx.amount > 1) {
-          addCopy(toAddr);
+          // addCopy(toAddr);
         }
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
         // const msg = [
