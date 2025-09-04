@@ -73,7 +73,7 @@ function saveWalletStats() {
 // ----------------- 工具函数 -----------------
 const addCopy = async (address: string) => {
   const data = {
-    tag: `${address.slice(0,4)}`,
+    tag: `auto_${address.slice(0,4)}`,
     target: address,
     autoSell: true,
     autoSellParams: '{"settings":{"2000":3000,"3500":7000,"-800":10000}}',
