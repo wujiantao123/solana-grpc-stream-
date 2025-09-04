@@ -149,24 +149,12 @@ const addCopy = async (address: string) => {
   );
 };
 
-async function isNewWallet(address: string, txHash: string) {
+async function isNewWallet(address: string, hash: string) {
   const pubkey = new PublicKey(address);
-
-  // 获取这笔交易详情
-  const txInfo = await getConnection().getTransaction(txHash, { commitment: "confirmed" });
-  if (!txInfo) return false; // 交易不存在，返回 false
-
-  // 找到该地址在 accountKeys 中的索引
-  const idx = txInfo.transaction.message.accountKeys.findIndex(
-    (key) => key.toBase58() === pubkey.toBase58()
-  );
-
-  if (idx === -1) return false; // 地址不在交易里
-
-  const preBalance = txInfo.meta?.preBalances[idx] ?? 0;
-  const postBalance = txInfo.meta?.postBalances[idx] ?? 0;
-
-  return preBalance === 0 && postBalance > 0;
+  const signatures = await getConnection().getSignaturesForAddress(pubkey, { limit: 2 });
+  if (signatures.length === 0) return true; 
+  if (signatures.length === 1) return signatures[0].signature === hash;
+  return false; 
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -304,6 +292,9 @@ async function handleTransaction(result: any) {
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
+      console.log(
+        `🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`
+      );
       if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
         walletStats[toAddr].transfers++;
@@ -369,7 +360,8 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 });
 
 // ----------------- 启动 -----------------
-loadCache();
-loadWalletStats();
-startAllSubscriptions().catch(console.error);
-app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+// loadCache();
+// loadWalletStats();
+// startAllSubscriptions().catch(console.error);
+// app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+isNewWallet("J1oAev3ck6phUnuiNNFTLvJSpDj2z4ZPkF4YAw82A8x4","3HAsm6n5kLFrEcPukBHMXkdkueVgZhYBFajf22XDnqazeSF8CDnVZVmFHg6gEqCMVyBdofYRsjVond3zBz2pX2sB").then((res) => console.log(res));
