@@ -74,8 +74,7 @@ function saveWalletStats() {
 const addCopy = async (address: string) => {
   const data = {
     tag: `${source[address]}_${address.slice(0,4)}`,
-    target: "q83Qv1vFuHU4QfVpkxFanoQCCXaPXoQ2PVauGmcAaNN",
-    id: "57d4826c08da4d80b5c0a4faf757b614",
+    target: {address},
     autoSell: true,
     autoSellParams: '{"settings":{"3500":10000,"-800":10000}}',
     autoSellTime: 0,
