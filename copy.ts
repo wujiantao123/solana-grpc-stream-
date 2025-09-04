@@ -99,7 +99,7 @@ const addCopy = async (address: string) => {
       },
       pvp: { is_enabled: true, sell_interval: 3, limit_time: 18000 },
       purchase: {
-        pump: [{ tip: 0.01, slippage: 20, input_sol: 0.8, priority_fee: 10 }],
+        pump: [{ tip: 0.006, slippage: 20, input_sol: 0.8, priority_fee: 10 }],
         amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
         heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
       },
