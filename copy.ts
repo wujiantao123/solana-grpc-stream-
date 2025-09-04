@@ -300,12 +300,12 @@ async function handleTransaction(result: any) {
         walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
         walletStats[toAddr].transfers++;
         saveWalletStats();
-        const msg = [
-          `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
-          `https://gmgn.ai/sol/address/${toAddr}`,
-          `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
-        ].join("\n");
-        await sendMessage(msg);
+        // const msg = [
+        //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
+        //   `https://gmgn.ai/sol/address/${toAddr}`,
+        //   `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
+        // ].join("\n");
+        // await sendMessage(msg);
       }
     }
   });
