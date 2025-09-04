@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import axios from "axios";
 import cors from "cors";
 import bs58 from "bs58";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey,SystemProgram } from "@solana/web3.js";
 import {
   subscribe,
   CommitmentLevel,
@@ -35,8 +35,15 @@ const getConnection = () => {
 
 // 来源钱包标注
 const source: Record<string, string> = {
+  "H8sMJSCQxfKiFTCfDR3DUMLPwcRbM61LGFJ8N4dK3WjS": "Coinbase 1",
+  "2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm": "Coinbase 2",
+  "GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE": "Coinbase Hot Wallet 2",
   "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo": "Coinbase Hot Wallet 4",
+  "2ojv9BAiHUrvsm9gxDe7fJSzbNZSJcxZvf8dqmWGHG8S": "Binance 1",
   "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9": "Binance 2",
+  "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM": "Binance 3",
+  "3gd3dqgtJ4jWfBfLYTX67DALFetjc5iS72sCgRhCkW2u": "Binance 10",
+  "6QJzieMYfp7yr3EdrePaQoG3Ghxs2wM98xSLRu8Xh56U": "Binance 11",
 };
 
 // ----------------- 数据缓存 -----------------
@@ -163,14 +170,107 @@ const baseSubscription: SubscribeRequest = {
   commitment: CommitmentLevel.CONFIRMED,
 };
 
-async function handleTransaction(result: any, endpoint: string) {
-  if (!result?.transaction) return;
+function toBuffer(obj: any): Buffer {
+  if (!obj) return Buffer.alloc(0);
+  if (Buffer.isBuffer(obj)) return obj;
+  if (obj.type === "Buffer" && Array.isArray(obj.data)) {
+    return Buffer.from(obj.data);
+  }
+  if (Array.isArray(obj)) {
+    return Buffer.from(obj);
+  }
+  throw new Error("Unsupported buffer format: " + JSON.stringify(obj));
+}
 
+// Buffer JSON -> PublicKey
+function bufferToPubkey(bufObj: any) {
+  return new PublicKey(Buffer.from(bufObj.data));
+}
+
+
+// 解析 SOL 转账
+function parseSolTransfers(result: any) {
+  const parse = JSON.parse(JSON.stringify(result))
+  const message = parse.transaction.transaction.message;
+  const transfers: any[] = [];
+  for (const ix of message.instructions) {
+    if (!ix.accounts || !ix.data) continue;
+    const programId = bufferToPubkey(message.accountKeys[ix.programIdIndex]);
+    if (!programId.equals(SystemProgram.programId)) continue;
+    // 仅当数据长度 >= 8 才尝试解析
+    const dataBuf = Buffer.from(ix.data.data);
+    if (dataBuf.length < 8) continue;
+
+    const accountsIndexes: number[] = Array.from(ix.accounts.data);
+    if (accountsIndexes.length < 2) continue;
+
+    const from = bufferToPubkey(
+      message.accountKeys[accountsIndexes[0]]
+    );
+    const to = bufferToPubkey(
+      message.accountKeys[accountsIndexes[1]]
+    );
+    const lamports = Number(Buffer.from(ix.data.data).slice(-8).readBigUInt64LE(0));
+    transfers.push({
+      type: "SOL",
+      from:from.toBase58(),
+      to:to.toBase58(),
+      amount: lamports / 1e9,
+    });
+  }
+  return transfers;
+}
+
+// 解析 SPL Token 转账
+function parseTokenTransfers(result: any) {
+  const message = result.transaction.transaction.message;
+  const transfers: any[] = [];
+
+  const preBalances = result.transaction.meta.preTokenBalances || [];
+  const postBalances = result.transaction.meta.postTokenBalances || [];
+
+  for (const post of postBalances) {
+    const pre = preBalances.find(
+      (p: { accountIndex: any; mint: any }) =>
+        p.accountIndex === post.accountIndex && p.mint === post.mint
+    );
+    if (!pre) continue;
+
+    const diff =
+      Number(post.uiTokenAmount.amount) - Number(pre.uiTokenAmount.amount);
+    if (diff === 0) continue;
+    const account = bufferToPubkey(
+        message.accountKeys[post.accountIndex]
+    )
+    if(account){
+      transfers.push({
+        type: "SPL",
+        mint: post.mint,
+        account: account.toBase58(),
+        owner: post.owner,
+        amount: diff / Math.pow(10, post.uiTokenAmount.decimals),
+        direction: diff > 0 ? "in" : "out",
+      });
+    }
+  }
+  return transfers;
+}
+function bufferToUint8Array(buf: any): Uint8Array {
+  if (buf instanceof Uint8Array) return buf;
+  if (buf?.type === "Buffer" && Array.isArray(buf.data)) {
+    return new Uint8Array(buf.data);
+  }
+  throw new Error("Invalid buffer format");
+}
+async function handleTransaction(result: any) {
+  if (!result?.transaction) return;
   const hash = bs58.encode(Buffer.from(result.transaction.signature));
   const accountKeys = result.transaction.transaction.message.accountKeys.map(
-    (b: Uint8Array | number[]) => bs58.encode(b)
+    (b: any) => {
+      const u8 = bufferToUint8Array(b);
+      return bs58.encode(u8);
+    }
   );
-
   // case1: 开盘监听
   if (accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")) {
     for (const addr of accountKeys) {
@@ -188,26 +288,25 @@ async function handleTransaction(result: any, endpoint: string) {
     }
     return;
   }
-
   // case2: 转账监听
-  const pre = Number(result.transaction.meta.preBalances[0]);
-  const post = Number(result.transaction.meta.postBalances[0]);
-  const transferAmountSol = (pre - post) / 1e9;
-
-  if (transferAmountSol > 0.3 && transferAmountSol < 5.1) {
-    const toAddr = accountKeys[1]; // TODO: 建议用 instruction 确认
-    if (await isNewWallet(toAddr)) {
-      walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
-      walletStats[toAddr].transfers++;
-      saveWalletStats();
-      const msg = [
-        `新钱包(${transferAmountSol} SOL) 来源 ${source[accountKeys[0]]||accountKeys[0]} 触发`,
-        `https://gmgn.ai/sol/address/${toAddr}`,
-        `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
-      ].join("\n");
-      await sendMessage(msg);
+  parseSolTransfers(result).forEach(async (tx) => {
+    console.log("监听到转账", hash, JSON.stringify(tx));
+    if (tx.amount > 0.3 && tx.amount < 5.1) {
+      const toAddr = tx.to;
+      console.log(`🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`);
+      if (await isNewWallet(toAddr)) {
+        walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
+        walletStats[toAddr].transfers++;
+        saveWalletStats();
+        const msg = [
+          `新钱包(${toAddr} SOL) 来源 ${source[tx.from]||tx.from} 触发`,
+          `https://gmgn.ai/sol/address/${toAddr}`,
+          `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
+        ].join("\n");
+        await sendMessage(msg);
+      }
     }
-  }
+  });
 }
 
 async function startAllSubscriptions() {
@@ -217,7 +316,7 @@ async function startAllSubscriptions() {
     await subscribe(
       config,
       baseSubscription,
-      (data) => handleTransaction(data.transaction, endpoint).catch(console.error),
+      (data) => handleTransaction(data.transaction).catch(console.error),
       (err) => console.error(`订阅错误 (${endpoint}):`, err)
     );
 
