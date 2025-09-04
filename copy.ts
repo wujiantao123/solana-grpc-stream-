@@ -303,7 +303,7 @@ async function handleTransaction(result: any) {
         };
         walletStats[toAddr].transfers++;
         saveWalletStats();
-        addCopy(toAddr);
+        // addCopy(toAddr);
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
         // const msg = [
         //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
