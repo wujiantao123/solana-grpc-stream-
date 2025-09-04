@@ -50,7 +50,7 @@ const source: Record<string, string> = {
 let followConfigs: Record<string, { target: number; count: number }> = {};
 let walletStats: Record<
   string,
-  { isNew: boolean; transfers: number; launches: number }
+  { isNew: boolean; transfers: number; launches: number; amount: number }
 > = {};
 
 function loadCache() {
@@ -293,7 +293,7 @@ async function handleTransaction(result: any) {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
       if (await isNewWallet(toAddr, hash)) {
-        walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
+        walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0, amount: tx.amount };
         walletStats[toAddr].transfers++;
         saveWalletStats();
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
