@@ -360,8 +360,7 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 });
 
 // ----------------- 启动 -----------------
-// loadCache();
-// loadWalletStats();
-// startAllSubscriptions().catch(console.error);
-// app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
-isNewWallet("J1oAev3ck6phUnuiNNFTLvJSpDj2z4ZPkF4YAw82A8x4","3HAsm6n5kLFrEcPukBHMXkdkueVgZhYBFajf22XDnqazeSF8CDnVZVmFHg6gEqCMVyBdofYRsjVond3zBz2pX2sB").then((res) => console.log(res));
+loadCache();
+loadWalletStats();
+startAllSubscriptions().catch(console.error);
+app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
