@@ -120,7 +120,7 @@ const addCopy = async (address: string) => {
         apikey:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
         authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTcwNzEzODJ9.fazuSQk3HcHfTnDPqcp1rJhyojYu1nUYo6xtPg6O36s",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTcwODgwNjZ9.iJ_9EiI5tEFw6RHRyzFUtcmmh0JQFN9oMTW8-Miz3OA",
       },
     }
   );
