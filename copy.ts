@@ -290,7 +290,6 @@ async function handleTransaction(result: any) {
   }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
-    console.log("监听到转账", hash, JSON.stringify(tx));
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
       console.log(`🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`);
