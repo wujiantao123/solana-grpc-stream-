@@ -73,37 +73,38 @@ function saveWalletStats() {
 // ----------------- 工具函数 -----------------
 const addCopy = async (address: string) => {
   const data = {
-    tag: `auto:${address.slice(0, 8)}`,
-    target: address,
+    tag: `${source[address]}_${address.slice(0,4)}`,
+    target: "q83Qv1vFuHU4QfVpkxFanoQCCXaPXoQ2PVauGmcAaNN",
+    id: "57d4826c08da4d80b5c0a4faf757b614",
     autoSell: true,
-    autoSellParams: '{"settings":{"3500":10000}}',
+    autoSellParams: '{"settings":{"3500":10000,"-800":10000}}',
     autoSellTime: 0,
     buyTimes: 1,
     buyTimesResetAfterSold: true,
     copySell: true,
     enableMev: 0,
     enableMevSell: 0,
-    enableTrailingStop: false,
+    enableTrailingStop: true,
     enableTurbo: false,
-    enabled: true,
+    enabled: false,
     firstSellPercent: 0,
     ignoreUnburnedLpTokens: false,
     ignoreUnrenouncedLpTokens: false,
     jitoFee: 10000000,
     jitoFeeSell: 0,
-    lowerLimitOfOneTransaction: 500000000,
-    upperLimitOfOneTransaction: 500000000,
-    totalUpperLimit: 550000000,
-    maxMc: -1,
+    lowerLimitOfOneTransaction: 600000000,
+    upperLimitOfOneTransaction: 600000000,
+    totalUpperLimit: 620000000,
+    maxMc: 8000,
     minMc: -1,
-    maxTokenAge: -1,
+    maxTokenAge: 600,
     minTokenAge: -1,
     minLp: -1,
     notCopyPositionAddition: false,
     notifyNoHolding: false,
     onlySell: false,
     priorityFee: 4000000,
-    priorityFeeSell: 1000000,
+    priorityFeeSell: 500000,
     pumpfunSlippageTimes: 15,
     ratio: 100,
     retryTimes: 0,
@@ -114,14 +115,14 @@ const addCopy = async (address: string) => {
     targetSolMaxBuy: -1,
     targetSolMinBuy: -1,
     trailingStopActivationBps: 0,
-    trailingStopBps: 0,
+    trailingStopBps: 800,
     copyPumpfun: true,
     copyRaydiumLaunchlab: true,
     copyRaydium: false,
     copyRaydiumCpmm: false,
     copyRaydiumClmm: false,
     copyMeteora: false,
-    copyMeteoraDbc: false,
+    copyMeteoraDbc: true,
     copyMeteoraDyn: false,
     copyMeteoraDammv2: false,
     copyPumpamm: false,
@@ -130,10 +131,10 @@ const addCopy = async (address: string) => {
     copyBoopfun: false,
     copyGavel: false,
     copyVertigo: false,
-    copyPancake: true,
-    copyHeaven: true,
-    copyOkxAggregator: true,
-    copyOrca: true,
+    copyPancake: false,
+    copyHeaven: false,
+    copyOkxAggregator: false,
+    copyOrca: false,
     activeStartTime: -1,
     activeEndTime: -1,
   };
@@ -151,10 +152,12 @@ const addCopy = async (address: string) => {
 
 async function isNewWallet(address: string, hash: string) {
   const pubkey = new PublicKey(address);
-  const signatures = await getConnection().getSignaturesForAddress(pubkey, { limit: 2 });
-  if (signatures.length === 0) return true; 
+  const signatures = await getConnection().getSignaturesForAddress(pubkey, {
+    limit: 2,
+  });
+  if (signatures.length === 0) return true;
   if (signatures.length === 1) return signatures[0].signature === hash;
-  return false; 
+  return false;
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -293,9 +296,15 @@ async function handleTransaction(result: any) {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
       if (await isNewWallet(toAddr, hash)) {
-        walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0, amount: tx.amount };
+        walletStats[toAddr] ??= {
+          isNew: true,
+          transfers: 0,
+          launches: 0,
+          amount: tx.amount,
+        };
         walletStats[toAddr].transfers++;
         saveWalletStats();
+        addCopy(toAddr);
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
         // const msg = [
         //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
