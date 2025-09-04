@@ -149,12 +149,24 @@ const addCopy = async (address: string) => {
   );
 };
 
-async function isNewWallet(address: string, hash: string) {
+async function isNewWallet(address: string, txHash: string) {
   const pubkey = new PublicKey(address);
-  const signatures = await getConnection().getSignaturesForAddress(pubkey, {
-    limit: 2,
-  });
-  return signatures.length === 0 || signatures[0].signature === hash;
+
+  // 获取这笔交易详情
+  const txInfo = await getConnection().getTransaction(txHash, { commitment: "confirmed" });
+  if (!txInfo) return false; // 交易不存在，返回 false
+
+  // 找到该地址在 accountKeys 中的索引
+  const idx = txInfo.transaction.message.accountKeys.findIndex(
+    (key) => key.toBase58() === pubkey.toBase58()
+  );
+
+  if (idx === -1) return false; // 地址不在交易里
+
+  const preBalance = txInfo.meta?.preBalances[idx] ?? 0;
+  const postBalance = txInfo.meta?.postBalances[idx] ?? 0;
+
+  return preBalance === 0 && postBalance > 0;
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -292,13 +304,11 @@ async function handleTransaction(result: any) {
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
-      console.log(
-        `🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`
-      );
       if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
         walletStats[toAddr].transfers++;
         saveWalletStats();
+        console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
         // const msg = [
         //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
         //   `https://gmgn.ai/sol/address/${toAddr}`,
