@@ -140,9 +140,9 @@ const addCopy = async (address: string) => {
 };
 
 async function isNewWallet(address: string) {
-    const pubkey = new PublicKey(address);
-  const accountInfo = await getConnection().getAccountInfo(pubkey);
-  return accountInfo === null;
+  const pubkey = new PublicKey(address);
+  const signatures = await getConnection().getSignaturesForAddress(pubkey, { limit: 1 });
+  return signatures.length === 0;
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -194,7 +194,7 @@ async function handleTransaction(result: any, endpoint: string) {
   const post = Number(result.transaction.meta.postBalances[0]);
   const transferAmountSol = (pre - post) / 1e9;
 
-  if (transferAmountSol > 0.3 && transferAmountSol < 3.1) {
+  if (transferAmountSol > 0.3 && transferAmountSol < 5.1) {
     const toAddr = accountKeys[1]; // TODO: 建议用 instruction 确认
     if (await isNewWallet(toAddr)) {
       walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };

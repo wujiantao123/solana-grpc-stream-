@@ -32,8 +32,8 @@
 
   async function isNewWallet(address: string) {
     const pubkey = new PublicKey(address);
-    const accountInfo = await getConnection().getAccountInfo(pubkey);
-    return accountInfo === null;
+    const signatures = await getConnection().getSignaturesForAddress(pubkey, { limit: 1 });
+    return signatures.length === 0;
   }
 
   const subscriptionRequest: SubscribeRequest = {
@@ -110,7 +110,7 @@
 
   // startAllSubscriptions().catch(console.error);
 const main = async ()=>{
-  console.log(await isNewWallet("7YuzRvzAHwhqdm9ALqd21dcabhNxUeTWR26wtChRSLjq"))
+  console.log(await isNewWallet("6K3qjnvCfGsfh4YEaPBRKSwm9yuKcvFBzCpKBeWcqCLZ"))
 }
 main()
 
