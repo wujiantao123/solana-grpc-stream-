@@ -85,7 +85,7 @@ const addCopy = async (address: string) => {
     enableMevSell: 0,
     enableTrailingStop: false,
     enableTurbo: false,
-    enabled: false,
+    enabled: true,
     firstSellPercent: 0,
     ignoreUnburnedLpTokens: false,
     ignoreUnrenouncedLpTokens: false,
@@ -365,8 +365,7 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 });
 
 // ----------------- 启动 -----------------
-// loadCache();
-// loadWalletStats();
-// startAllSubscriptions().catch(console.error);
-// app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
-addCopy("2FgvYiJSZLFmJcZhAePZFwASVAvLaEvdz1RzzGb6uDUR").catch(console.error);
+loadCache();
+loadWalletStats();
+startAllSubscriptions().catch(console.error);
+app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
