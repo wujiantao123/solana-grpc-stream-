@@ -292,9 +292,6 @@ async function handleTransaction(result: any) {
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
-      console.log(
-        `🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`
-      );
       if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
         walletStats[toAddr].transfers++;
