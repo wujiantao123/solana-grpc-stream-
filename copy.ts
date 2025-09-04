@@ -94,7 +94,7 @@ const addCopy = async (address: string) => {
     lowerLimitOfOneTransaction: 600000000,
     upperLimitOfOneTransaction: 600000000,
     totalUpperLimit: 620000000,
-    maxMc: 8000,
+    maxMc: -1,
     minMc: -1,
     maxTokenAge: 600,
     minTokenAge: -1,
