@@ -35,7 +35,7 @@ const getConnection = () => {
 
 // 来源钱包标注
 const source: Record<string, string> = {
-  DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo: "Coinbase Hot Wallet 4",
+  "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo": "Coinbase Hot Wallet 4",
   "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9": "Binance 2",
 };
 
@@ -201,7 +201,7 @@ async function handleTransaction(result: any, endpoint: string) {
       walletStats[toAddr].transfers++;
       saveWalletStats();
       const msg = [
-        `新钱包(${transferAmountSol} SOL) 来源 ${source[accountKeys[0]]}`,
+        `新钱包(${transferAmountSol} SOL) 来源 ${source[accountKeys[0]]||accountKeys[0]} 触发`,
         `https://gmgn.ai/sol/address/${toAddr}`,
         `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
       ].join("\n");
