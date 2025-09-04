@@ -149,13 +149,12 @@ const addCopy = async (address: string) => {
   );
 };
 
-async function isNewWallet(address: string) {
+async function isNewWallet(address: string, hash: string) {
   const pubkey = new PublicKey(address);
-
   const signatures = await getConnection().getSignaturesForAddress(pubkey, {
-    limit: 1,
+    limit: 2,
   });
-  return signatures.length === 1 || signatures.length === 0;
+  return signatures.length === 0 || signatures[0].signature === hash;
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -296,7 +295,7 @@ async function handleTransaction(result: any) {
       console.log(
         `🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`
       );
-      if (await isNewWallet(toAddr)) {
+      if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
         walletStats[toAddr].transfers++;
         saveWalletStats();
