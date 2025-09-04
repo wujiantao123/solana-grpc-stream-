@@ -344,9 +344,7 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 });
 
 // ----------------- 启动 -----------------
-// loadCache();
-// loadWalletStats();
-// startAllSubscriptions().catch(console.error);
-// app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
-
-addCopy("EZLQjSgzTwwJsT3Qv2htjFcqScJoYSs6WhaZtQVzYw51");
+loadCache();
+loadWalletStats();
+startAllSubscriptions().catch(console.error);
+app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
