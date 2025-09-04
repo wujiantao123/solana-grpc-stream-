@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import axios from "axios";
 import cors from "cors";
 import bs58 from "bs58";
-import { Connection, PublicKey,SystemProgram } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   subscribe,
   CommitmentLevel,
@@ -35,10 +35,10 @@ const getConnection = () => {
 
 // 来源钱包标注
 const source: Record<string, string> = {
-  "H8sMJSCQxfKiFTCfDR3DUMLPwcRbM61LGFJ8N4dK3WjS": "Coinbase 1",
+  H8sMJSCQxfKiFTCfDR3DUMLPwcRbM61LGFJ8N4dK3WjS: "Coinbase 1",
   "2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm": "Coinbase 2",
-  "GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE": "Coinbase Hot Wallet 2",
-  "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo": "Coinbase Hot Wallet 4",
+  GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE: "Coinbase Hot Wallet 2",
+  DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo: "Coinbase Hot Wallet 4",
   "2ojv9BAiHUrvsm9gxDe7fJSzbNZSJcxZvf8dqmWGHG8S": "Binance 1",
   "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9": "Binance 2",
   "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM": "Binance 3",
@@ -48,7 +48,10 @@ const source: Record<string, string> = {
 
 // ----------------- 数据缓存 -----------------
 let followConfigs: Record<string, { target: number; count: number }> = {};
-let walletStats: Record<string, { isNew: boolean; transfers: number; launches: number }> = {};
+let walletStats: Record<
+  string,
+  { isNew: boolean; transfers: number; launches: number }
+> = {};
 
 function loadCache() {
   if (fs.existsSync(CACHE_FILE)) {
@@ -148,8 +151,11 @@ const addCopy = async (address: string) => {
 
 async function isNewWallet(address: string) {
   const pubkey = new PublicKey(address);
-  const signatures = await getConnection().getSignaturesForAddress(pubkey, { limit: 1 });
-  return signatures.length === 0;
+
+  const signatures = await getConnection().getSignaturesForAddress(pubkey, {
+    limit: 1,
+  });
+  return signatures.length === 1 || signatures.length === 0;
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -187,10 +193,9 @@ function bufferToPubkey(bufObj: any) {
   return new PublicKey(Buffer.from(bufObj.data));
 }
 
-
 // 解析 SOL 转账
 function parseSolTransfers(result: any) {
-  const parse = JSON.parse(JSON.stringify(result))
+  const parse = JSON.parse(JSON.stringify(result));
   const message = parse.transaction.transaction.message;
   const transfers: any[] = [];
   for (const ix of message.instructions) {
@@ -204,17 +209,15 @@ function parseSolTransfers(result: any) {
     const accountsIndexes: number[] = Array.from(ix.accounts.data);
     if (accountsIndexes.length < 2) continue;
 
-    const from = bufferToPubkey(
-      message.accountKeys[accountsIndexes[0]]
+    const from = bufferToPubkey(message.accountKeys[accountsIndexes[0]]);
+    const to = bufferToPubkey(message.accountKeys[accountsIndexes[1]]);
+    const lamports = Number(
+      Buffer.from(ix.data.data).slice(-8).readBigUInt64LE(0)
     );
-    const to = bufferToPubkey(
-      message.accountKeys[accountsIndexes[1]]
-    );
-    const lamports = Number(Buffer.from(ix.data.data).slice(-8).readBigUInt64LE(0));
     transfers.push({
       type: "SOL",
-      from:from.toBase58(),
-      to:to.toBase58(),
+      from: from.toBase58(),
+      to: to.toBase58(),
       amount: lamports / 1e9,
     });
   }
@@ -239,10 +242,8 @@ function parseTokenTransfers(result: any) {
     const diff =
       Number(post.uiTokenAmount.amount) - Number(pre.uiTokenAmount.amount);
     if (diff === 0) continue;
-    const account = bufferToPubkey(
-        message.accountKeys[post.accountIndex]
-    )
-    if(account){
+    const account = bufferToPubkey(message.accountKeys[post.accountIndex]);
+    if (account) {
       transfers.push({
         type: "SPL",
         mint: post.mint,
@@ -292,13 +293,15 @@ async function handleTransaction(result: any) {
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
-      console.log(`🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`);
+      console.log(
+        `🔔 监听到大额转账 ${tx.amount} SOL, from ${tx.from} to ${toAddr}, tx: https://solscan.io/tx/${hash}`
+      );
       if (await isNewWallet(toAddr)) {
         walletStats[toAddr] ??= { isNew: true, transfers: 0, launches: 0 };
         walletStats[toAddr].transfers++;
         saveWalletStats();
         const msg = [
-          `新钱包(${toAddr} SOL) 来源 ${source[tx.from]||tx.from} 触发`,
+          `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
           `https://gmgn.ai/sol/address/${toAddr}`,
           `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
         ].join("\n");
@@ -332,7 +335,10 @@ app.post("/testapi/add", (req: Request, res: Response) => {
   const { address, times } = req.body;
   if (!address || !times) return res.status(400).json({ error: "缺少参数" });
 
-  followConfigs[address] = { target: times, count: followConfigs[address]?.count || 0 };
+  followConfigs[address] = {
+    target: times,
+    count: followConfigs[address]?.count || 0,
+  };
   saveCache();
   if (times <= 1) addCopy(address).catch(console.error);
 
@@ -341,7 +347,8 @@ app.post("/testapi/add", (req: Request, res: Response) => {
 
 app.post("/testapi/remove", (req: Request, res: Response) => {
   const { address } = req.body;
-  if (!address || !followConfigs[address]) return res.status(400).json({ error: "地址不存在" });
+  if (!address || !followConfigs[address])
+    return res.status(400).json({ error: "地址不存在" });
 
   delete followConfigs[address];
   saveCache();
