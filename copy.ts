@@ -73,77 +73,54 @@ function saveWalletStats() {
 // ----------------- 工具函数 -----------------
 const addCopy = async (address: string) => {
   const data = {
-    tag: `auto_${address.slice(0,4)}`,
-    target: address,
-    autoSell: true,
-    autoSellParams: '{"settings":{"1000":3000,"3500":7000,"-800":10000}}',
-    autoSellTime: 0,
-    buyTimes: 1,
-    buyTimesResetAfterSold: true,
-    copySell: true,
-    enableMev: 0,
-    enableMevSell: 0,
-    enableTrailingStop: true,
-    enableTurbo: false,
-    enabled: true,
-    firstSellPercent: 0,
-    ignoreUnburnedLpTokens: false,
-    ignoreUnrenouncedLpTokens: false,
-    jitoFee: 7000000,
-    jitoFeeSell: 0,
-    lowerLimitOfOneTransaction: 400000000,
-    upperLimitOfOneTransaction: 400000000,
-    totalUpperLimit: 420000000,
-    maxMc: -1,
-    minMc: -1,
-    maxTokenAge: 600,
-    minTokenAge: -1,
-    minLp: -1,
-    notCopyPositionAddition: false,
-    notifyNoHolding: false,
-    onlySell: false,
-    priorityFee: 4000000,
-    priorityFeeSell: 500000,
-    pumpfunSlippageTimes: 15,
-    ratio: 100,
-    retryTimes: 0,
-    sellByPositionProportion: true,
-    slippage: 15,
-    slippageSell: 30,
-    slippagePumpSell: 30,
-    targetSolMaxBuy: -1,
-    targetSolMinBuy: -1,
-    trailingStopActivationBps: 0,
-    trailingStopBps: 200,
-    copyPumpfun: true,
-    copyRaydiumLaunchlab: true,
-    copyRaydium: false,
-    copyRaydiumCpmm: false,
-    copyRaydiumClmm: false,
-    copyMeteora: false,
-    copyMeteoraDbc: true,
-    copyMeteoraDyn: false,
-    copyMeteoraDammv2: false,
-    copyPumpamm: false,
-    copyJupiterAggregator: false,
-    copyMoonshot: false,
-    copyBoopfun: false,
-    copyGavel: false,
-    copyVertigo: false,
-    copyPancake: false,
-    copyHeaven: false,
-    copyOkxAggregator: false,
-    copyOrca: false,
-    activeStartTime: -1,
-    activeEndTime: -1,
+    user_id: "ad3e226c-6f23-4ba8-963a-06ff170385da",
+    run_wallet_id: "c1f2e59e-1629-4f17-9f06-1b08ed0861af",
+    wallet_address: address,
+    config_data: {
+      address: address,
+      remarks: `交易所_${address.slice(0, 4)}`,
+      risk_level: "high",
+      dexs: ["Pump"],
+      multiple_wallet: 1,
+      wallet_purchase_num: 1,
+      remaining_sol_value: 0.2,
+      is_first_purchase_enabled: true,
+      is_follow_sell_enabled: true,
+      is_sync_rebalance_enabled: true,
+      is_safe: false,
+      is_exclude_pump_enabled: false,
+      is_exclude_amm_enabled: true,
+      is_dev_create_pool: true,
+      sell: {
+        tranche_sell_strategy: {
+          stage_stay_seconds: 1,
+          not_entered_tranche_seconds: 3,
+        },
+      },
+      pvp: { is_enabled: true, sell_interval: 3, limit_time: 18000 },
+      purchase: {
+        pump: [{ tip: 0.01, slippage: 20, input_sol: 0.8, priority_fee: 10 }],
+        amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+        heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+      },
+      tranche_based_strategy: [
+        { reduce_stock: 30, profit_percent: 15, stop_loss_percent: 10 },
+      ],
+      transation_sell: { tip: 0.0002, service: "ZeroSlot", priority_fee: 1 },
+      is_active: true,
+    },
+    is_active: true,
+    updated_at: new Date().toISOString(),
   };
   await axios.post(
-    "https://copy.fastradewiz.com/api/v1/upsertCopyTrading",
+    "https://ststoebkbdbqhlfyttjr.supabase.co/rest/v1/smart_wallets?on_conflict=user_id%2Crun_wallet_id%2Cwallet_address&select=*",
     data,
     {
       headers: {
+        apikey:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
         authorization:
-          "Bearer rBvghG9oJNY6Q23Gt2fcaaRjUNaBlkf4XFwvYBSLLljgCjOgVJmJmrDImHL2DV1rHq4bdQB5OiZeW70JEapU4WogADh6HbjQY+0WxInJ5s1KHy7d+i3oi1sgxZhGWaUxvDjQdWSYzMGp01JUaYjh3YuH5JNdG6P+FTRu7E9r+W4gQXYSTQRtZ7AGkn4l1K97526omRlvbEyLHM040+NmIvx02OSvkmdnomhbHoKLQF06RAI6e6JeA86tewLScAX9TkEivXwuOLafLY6/LjS6GJ54WsaRRAXeZXQvrKQDFsXOqXjIL2xKHQAC1CwlYV1LH+cFaXBJM1rpkwOHcyOL0w==",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTcwNzEzODJ9.fazuSQk3HcHfTnDPqcp1rJhyojYu1nUYo6xtPg6O36s",
       },
     }
   );
@@ -303,7 +280,9 @@ async function handleTransaction(result: any) {
         };
         walletStats[toAddr].transfers++;
         saveWalletStats();
-        // addCopy(toAddr);
+        if (tx.amount > 1) {
+          addCopy(toAddr);
+        }
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
         // const msg = [
         //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
@@ -365,7 +344,9 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 });
 
 // ----------------- 启动 -----------------
-loadCache();
-loadWalletStats();
-startAllSubscriptions().catch(console.error);
-app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+// loadCache();
+// loadWalletStats();
+// startAllSubscriptions().catch(console.error);
+// app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+
+addCopy("EZLQjSgzTwwJsT3Qv2htjFcqScJoYSs6WhaZtQVzYw51");
