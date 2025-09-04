@@ -93,7 +93,7 @@ const addCopy = async (address: string) => {
       is_dev_create_pool: true,
       sell: {
         tranche_sell_strategy: {
-          stage_stay_seconds: 1,
+          stage_stay_seconds: 2,
           not_entered_tranche_seconds: 3,
         },
       },
