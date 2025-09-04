@@ -89,7 +89,7 @@ const addCopy = async (address: string) => {
     firstSellPercent: 0,
     ignoreUnburnedLpTokens: false,
     ignoreUnrenouncedLpTokens: false,
-    jitoFee: 10000000,
+    jitoFee: 7000000,
     jitoFeeSell: 0,
     lowerLimitOfOneTransaction: 600000000,
     upperLimitOfOneTransaction: 600000000,
