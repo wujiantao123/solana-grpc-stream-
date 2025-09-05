@@ -274,6 +274,7 @@ async function handleTransaction(result: any) {
       if(tx.from==="EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7"){
         // 特殊的一个转账地址可以搞钱
         addCopy(toAddr).catch(console.error);
+        sendMessage(`💰 特殊转账触发跟单: ${toAddr} https://gmgn.ai/sol/address/${toAddr}`).catch(console.error);
       }
       if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= {
