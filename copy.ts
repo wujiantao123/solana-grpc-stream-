@@ -206,12 +206,17 @@ const tradewizAddCopy = async (address: string) => {
 
 async function isNewWallet(address: string, hash: string) {
   const pubkey = new PublicKey(address);
-  const signatures = await getConnection().getSignaturesForAddress(pubkey, {
-    limit: 2,
-  });
-  if (signatures.length === 0) return true;
-  if (signatures.length === 1) return signatures[0].signature === hash;
-  return false;
+  try {
+    const signatures = await getConnection().getSignaturesForAddress(pubkey, {
+      limit: 2,
+    });
+    if (signatures.length === 0) return true;
+    if (signatures.length === 1) return signatures[0].signature === hash;
+    return false;
+  } catch (e) {
+    console.error("isNewWallet error:", e);
+    return false;
+  }
 }
 
 // ----------------- 订阅逻辑 -----------------
@@ -367,6 +372,7 @@ async function handleTransaction(result: any) {
         walletStats[toAddr].transfers++;
         saveWalletStats();
         if (tx.amount > 1) {
+          console.log("💸等待20分钟执行", toAddr);
           peddingWallets[toAddr] = setTimeout(() => {
             if (followConfigs[toAddr]) return;
             tradewizAddCopy(toAddr).catch(console.error);
