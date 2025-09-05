@@ -99,7 +99,7 @@ const addCopy = async (address: string) => {
       },
       pvp: { is_enabled: true, sell_interval: 3, limit_time: 18000 },
       purchase: {
-        pump: [{ tip: 0.006, slippage: 20, input_sol: 0.8, priority_fee: 10 }],
+        pump: [{ tip: 0.01, slippage: 20, input_sol: 1, priority_fee: 20 }],
         amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
         heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
       },
@@ -119,7 +119,7 @@ const addCopy = async (address: string) => {
         apikey:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
         authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTcwODgwNjZ9.iJ_9EiI5tEFw6RHRyzFUtcmmh0JQFN9oMTW8-Miz3OA",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTcxMjcwMDN9.acj11iPJAfeoX4-KN6shovt0MGAntR7sJz9_VI6Lgv8",
       },
     }
   );
@@ -143,6 +143,7 @@ const baseSubscription: SubscribeRequest = {
         "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
         "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
+        "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7"
       ],
       accountExclude: [],
       accountRequired: [],
@@ -270,6 +271,10 @@ async function handleTransaction(result: any) {
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
+      if(tx.from==="EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7"){
+        // 特殊的一个转账地址可以搞钱
+        addCopy(toAddr).catch(console.error);
+      }
       if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= {
           isNew: true,
