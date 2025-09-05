@@ -52,6 +52,7 @@ let walletStats: Record<
   string,
   { isNew: boolean; transfers: number; launches: number; amount: number }
 > = {};
+const peddingWallets: Record<string, NodeJS.Timeout> = {};
 
 function loadCache() {
   if (fs.existsSync(CACHE_FILE)) {
@@ -71,7 +72,7 @@ function saveWalletStats() {
 }
 
 // ----------------- 工具函数 -----------------
-const addCopy = async (address: string) => {
+const monKAddCopy = async (address: string) => {
   const data = {
     user_id: "ad3e226c-6f23-4ba8-963a-06ff170385da",
     run_wallet_id: "c1f2e59e-1629-4f17-9f06-1b08ed0861af",
@@ -124,6 +125,84 @@ const addCopy = async (address: string) => {
     }
   );
 };
+const tradewizAddCopy = async (address: string) => {
+  const data = {
+    tag: `交易所_${address.slice(0, 4)}`,
+    target: address,
+    id: "",
+    autoSell: true,
+    autoSellParams: '{"settings":{"1500":2000,"3500":8000,"-200":10000}}',
+    autoSellTime: 0,
+    buyTimes: -1,
+    buyTimesResetAfterSold: false,
+    copySell: true,
+    enableMev: 0,
+    enableMevSell: 0,
+    enableTrailingStop: false,
+    enableTurbo: false,
+    enabled: true,
+    firstSellPercent: 0,
+    ignoreUnburnedLpTokens: false,
+    ignoreUnrenouncedLpTokens: false,
+    jitoFee: 7000000,
+    jitoFeeSell: 0,
+    lowerLimitOfOneTransaction: 600000000,
+    upperLimitOfOneTransaction: 600000000,
+    totalUpperLimit: 650000000,
+    maxMc: -1,
+    minMc: -1,
+    maxTokenAge: 600,
+    minTokenAge: -1,
+    minLp: -1,
+    notCopyPositionAddition: false,
+    notifyNoHolding: false,
+    onlySell: false,
+    priorityFee: 1000000,
+    priorityFeeSell: 500000,
+    pumpfunSlippageTimes: 18,
+    ratio: 100,
+    retryTimes: 0,
+    sellByPositionProportion: true,
+    slippage: 18,
+    slippageSell: 30,
+    slippagePumpSell: 30,
+    targetSolMaxBuy: -1,
+    targetSolMinBuy: -1,
+    trailingStopActivationBps: 0,
+    trailingStopBps: 0,
+    copyPumpfun: true,
+    copyRaydiumLaunchlab: true,
+    copyRaydium: true,
+    copyRaydiumCpmm: true,
+    copyRaydiumClmm: true,
+    copyMeteora: true,
+    copyMeteoraDbc: true,
+    copyMeteoraDyn: true,
+    copyMeteoraDammv2: true,
+    copyPumpamm: true,
+    copyJupiterAggregator: true,
+    copyMoonshot: true,
+    copyBoopfun: true,
+    copyGavel: true,
+    copyVertigo: true,
+    copyPancake: true,
+    copyHeaven: true,
+    copyOkxAggregator: true,
+    copyOrca: true,
+    activeStartTime: -1,
+    activeEndTime: -1,
+  };
+  await axios.post(
+    "https://copy.fastradewiz.com/api/v1/upsertCopyTrading",
+    data,
+    {
+      headers: {
+        authorization:
+          "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
+      },
+    }
+  );
+};
 
 async function isNewWallet(address: string, hash: string) {
   const pubkey = new PublicKey(address);
@@ -143,7 +222,7 @@ const baseSubscription: SubscribeRequest = {
         "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
         "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
-        "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7"
+        "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7",
       ],
       accountExclude: [],
       accountRequired: [],
@@ -257,7 +336,7 @@ async function handleTransaction(result: any) {
         followConfigs[addr].count++;
         saveCache();
         if (followConfigs[addr].count === followConfigs[addr].target - 1) {
-          await addCopy(addr);
+          await tradewizAddCopy(addr);
         }
       }
       if (walletStats[addr]?.isNew) {
@@ -271,10 +350,12 @@ async function handleTransaction(result: any) {
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
       const toAddr = tx.to;
-      if(tx.from==="EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7"){
+      if (tx.from === "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7") {
         // 特殊的一个转账地址可以搞钱
-        addCopy(toAddr).catch(console.error);
-        sendMessage(`💰 特殊转账触发跟单: ${toAddr} https://gmgn.ai/sol/address/${toAddr}`).catch(console.error);
+        monKAddCopy(toAddr).catch(console.error);
+        sendMessage(
+          `💰 特殊转账触发跟单: ${toAddr} https://gmgn.ai/sol/address/${toAddr}`
+        ).catch(console.error);
       }
       if (await isNewWallet(toAddr, hash)) {
         walletStats[toAddr] ??= {
@@ -286,7 +367,12 @@ async function handleTransaction(result: any) {
         walletStats[toAddr].transfers++;
         saveWalletStats();
         if (tx.amount > 1) {
-          // addCopy(toAddr);
+          peddingWallets[toAddr] = setTimeout(() => {
+            if (followConfigs[toAddr]) return;
+            tradewizAddCopy(toAddr).catch(console.error);
+            console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
+            delete peddingWallets[toAddr];
+          }, 20 * 60 * 1000);
         }
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
         // const msg = [
@@ -314,7 +400,6 @@ async function startAllSubscriptions() {
     console.log(`✅ 已连接 Laserstream 节点: ${endpoint}`);
   }
 }
-
 // ----------------- HTTP API -----------------
 const app = express();
 app.use(cors());
@@ -329,7 +414,7 @@ app.post("/testapi/add", (req: Request, res: Response) => {
     count: followConfigs[address]?.count || 0,
   };
   saveCache();
-  if (times <= 1) addCopy(address).catch(console.error);
+  if (times <= 1) tradewizAddCopy(address).catch(console.error);
 
   res.json({ success: true });
 });
