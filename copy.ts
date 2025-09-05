@@ -348,6 +348,11 @@ async function handleTransaction(result: any) {
         walletStats[addr].launches++;
         saveWalletStats();
       }
+      if (peddingWallets[addr]) {
+        clearTimeout(peddingWallets[addr]);
+        delete peddingWallets[addr];
+        console.log("❌ 取消延时跟单:", addr);
+      }
     }
     return;
   }
