@@ -149,7 +149,7 @@ const tradewizAddCopy = async (address: string) => {
     lowerLimitOfOneTransaction: 600000000,
     upperLimitOfOneTransaction: 600000000,
     totalUpperLimit: 650000000,
-    maxMc: -1,
+    maxMc: 8000,
     minMc: -1,
     maxTokenAge: 600,
     minTokenAge: -1,
