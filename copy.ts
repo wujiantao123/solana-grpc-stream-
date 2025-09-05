@@ -11,7 +11,7 @@ import {
   SubscribeRequest,
 } from "helius-laserstream";
 import sendMessage from "./sendMessage.js";
-
+let isProcessing = false;
 // ----------------- 配置 -----------------
 const CACHE_FILE = "./followConfigs.json";
 const WALLET_STATS_FILE = "./walletStats.json";
@@ -204,6 +204,53 @@ const tradewizAddCopy = async (address: string) => {
   );
 };
 
+const getTradewizCopies = async () => {
+  if (isProcessing) {
+    console.log("⏳ 已有一个任务在处理，跳过本次调用");
+    return;
+  }
+
+  isProcessing = true;
+  try {
+    const response = await axios.get(
+      "https://copy.fastradewiz.com/api/v1/getCopyTradingList",
+      {
+        headers: {
+          authorization: "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
+        },
+      }
+    );
+
+    const cexTarget = response.data.data.list.filter((item: any) =>
+      item.tag?.startsWith("交易所_")
+    );
+
+    while (cexTarget.length > 250) {
+      const index = Math.floor(Math.random() * cexTarget.length);
+      await delTradewizCopy(cexTarget[index].id);
+      cexTarget.splice(index, 1);
+    }
+
+    console.log("✅ 清理完成");
+  } catch (err) {
+    console.error("❌ getTradewizCopies 出错:", err);
+  } finally {
+    isProcessing = false;
+  }
+};
+
+const delTradewizCopy = async (id: string) => {
+  await axios.post(
+    `https://copy.fastradewiz.com/api/v1/deleteCopyTrading/${id}`,{},
+    {
+      headers: {
+        authorization:
+          "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
+      },
+    }
+  );
+};
+
 async function isNewWallet(address: string, hash: string) {
   const pubkey = new PublicKey(address);
   try {
@@ -383,6 +430,7 @@ async function handleTransaction(result: any) {
             tradewizAddCopy(toAddr).catch(console.error);
             console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
             delete peddingWallets[toAddr];
+            getTradewizCopies().catch(console.error);
           }, 20 * 60 * 1000);
         }
         console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
@@ -447,5 +495,6 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
 // ----------------- 启动 -----------------
 loadCache();
 loadWalletStats();
+getTradewizCopies().catch(console.error);
 startAllSubscriptions().catch(console.error);
 app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
