@@ -279,6 +279,7 @@ const baseSubscription: SubscribeRequest = {
         "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
         "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7",
+        "7HeD6sLLqAnKVRuSfc1Ko3BSPMNKWgGTiWLKXJF31vKM",
       ],
       accountExclude: [],
       accountRequired: [],
@@ -303,7 +304,11 @@ function toBuffer(obj: any): Buffer {
 
 // Buffer JSON -> PublicKey
 function bufferToPubkey(bufObj: any) {
-  return new PublicKey(Buffer.from(bufObj.data));
+  try {
+    return new PublicKey(Buffer.from(bufObj.data));
+  } catch (e) {
+    return new PublicKey("11111111111111111111111111111111");
+  }
 }
 
 // 解析 SOL 转账
@@ -379,6 +384,7 @@ function bufferToUint8Array(buf: any): Uint8Array {
 async function handleTransaction(result: any) {
   if (!result?.transaction) return;
   const hash = bs58.encode(Buffer.from(result.transaction.signature));
+  console.log(new Date().toISOString(), "新交易:", hash);
   const accountKeys = result.transaction.transaction.message.accountKeys.map(
     (b: any) => {
       const u8 = bufferToUint8Array(b);
@@ -407,6 +413,10 @@ async function handleTransaction(result: any) {
     }
     return;
   }
+  if (accountKeys.includes("7HeD6sLLqAnKVRuSfc1Ko3BSPMNKWgGTiWLKXJF31vKM")) {
+    console.log("Bloom 交易发生", hash, accountKeys);
+    return;
+  }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
@@ -418,33 +428,24 @@ async function handleTransaction(result: any) {
           `💰 特殊转账触发跟单: ${toAddr} https://gmgn.ai/sol/address/${toAddr}`
         ).catch(console.error);
       }
-      // if (await isNewWallet(toAddr, hash)) {
-      //   walletStats[toAddr] ??= {
-      //     isNew: true,
-      //     transfers: 0,
-      //     launches: 0,
-      //     amount: tx.amount,
-      //   };
-      //   walletStats[toAddr].transfers++;
-      //   saveWalletStats();
-      //   if (tx.amount > 1) {
-      //     console.log("💸等待20分钟执行", toAddr);
-      //     peddingWallets[toAddr] = setTimeout(() => {
-      //       if (followConfigs[toAddr]) return;
-      //       tradewizAddCopy(toAddr).catch(console.error);
-      //       console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
-      //       delete peddingWallets[toAddr];
-      //       getTradewizCopies().catch(console.error);
-      //     }, 20 * 60 * 1000);
-      //   }
-      //   console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
-      //   // const msg = [
-      //   //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
-      //   //   `https://gmgn.ai/sol/address/${toAddr}`,
-      //   //   `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
-      //   // ].join("\n");
-      //   // await sendMessage(msg);
-      // }
+      if (await isNewWallet(toAddr, hash)) {
+        if (tx.amount > 1) {
+          console.log("💸等待1小时执行", toAddr);
+          peddingWallets[toAddr] = setTimeout(() => {
+            if (followConfigs[toAddr]) return;
+            console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
+            walletStats[toAddr] ??= {
+              isNew: true,
+              transfers: 0,
+              launches: 0,
+              amount: tx.amount,
+            };
+            walletStats[toAddr].transfers++;
+            saveWalletStats();
+            delete peddingWallets[toAddr];
+          }, 50 * 60 * 1000);
+        }
+      }
     }
   });
 }

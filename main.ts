@@ -299,23 +299,4 @@ setInterval(() => {
   processedAddresses.clear();
 }, 1000 * 60 * 5);
 
-// startAllSubscriptions().catch(console.error);
-const main = async ()=>{
-  const result = await getConnection().getTransaction(
-    "4a6a9LxgZqmMo9jAXTUh1LoEam4iaffjXnfCoF8r69w8KLtuFHoDtfRvZT3wWYBTW2UCTsWPrszKtHAuGBCDh167",
-    {
-      maxSupportedTransactionVersion: 0,
-    }
-  );
-  const instructions = result?.transaction.message;
-  console.log(instructions,'instructions');
-  // instructions?.forEach((inst)=>{
-  //   console.log(inst);
-  //   // if('parsed' in inst && inst.parsed?.type === 'transfer'){
-  //   //   const info = inst.parsed.info;
-  //   //   console.log(info.destination, info.lamports / 10**9);
-  //   // }
-  // })
-}
-
-main()
+startAllSubscriptions().catch(console.error);
