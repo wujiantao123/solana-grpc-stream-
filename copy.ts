@@ -414,33 +414,33 @@ async function handleTransaction(result: any) {
           `💰 特殊转账触发跟单: ${toAddr} https://gmgn.ai/sol/address/${toAddr}`
         ).catch(console.error);
       }
-      if (await isNewWallet(toAddr, hash)) {
-        walletStats[toAddr] ??= {
-          isNew: true,
-          transfers: 0,
-          launches: 0,
-          amount: tx.amount,
-        };
-        walletStats[toAddr].transfers++;
-        saveWalletStats();
-        if (tx.amount > 1) {
-          console.log("💸等待20分钟执行", toAddr);
-          peddingWallets[toAddr] = setTimeout(() => {
-            if (followConfigs[toAddr]) return;
-            tradewizAddCopy(toAddr).catch(console.error);
-            console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
-            delete peddingWallets[toAddr];
-            getTradewizCopies().catch(console.error);
-          }, 20 * 60 * 1000);
-        }
-        console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
-        // const msg = [
-        //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
-        //   `https://gmgn.ai/sol/address/${toAddr}`,
-        //   `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
-        // ].join("\n");
-        // await sendMessage(msg);
-      }
+      // if (await isNewWallet(toAddr, hash)) {
+      //   walletStats[toAddr] ??= {
+      //     isNew: true,
+      //     transfers: 0,
+      //     launches: 0,
+      //     amount: tx.amount,
+      //   };
+      //   walletStats[toAddr].transfers++;
+      //   saveWalletStats();
+      //   if (tx.amount > 1) {
+      //     console.log("💸等待20分钟执行", toAddr);
+      //     peddingWallets[toAddr] = setTimeout(() => {
+      //       if (followConfigs[toAddr]) return;
+      //       tradewizAddCopy(toAddr).catch(console.error);
+      //       console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
+      //       delete peddingWallets[toAddr];
+      //       getTradewizCopies().catch(console.error);
+      //     }, 20 * 60 * 1000);
+      //   }
+      //   console.log("🆕 发现新钱包:", toAddr, walletStats[toAddr]);
+      //   // const msg = [
+      //   //   `新钱包(${toAddr} SOL) 来源 ${source[tx.from] || tx.from} 触发`,
+      //   //   `https://gmgn.ai/sol/address/${toAddr}`,
+      //   //   `https://webtest.tradewiz.trade/copy.html?address=${toAddr}`,
+      //   // ].join("\n");
+      //   // await sendMessage(msg);
+      // }
     }
   });
 }
