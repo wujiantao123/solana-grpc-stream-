@@ -79,12 +79,12 @@ const monKAddCopy = async (address: string) => {
     wallet_address: address,
     config_data: {
       address: address,
-      remarks: `交易所_${address.slice(0, 4)}`,
-      risk_level: "high",
-      dexs: ["Pump"],
+      remarks: `特殊转账跟单_${address.slice(0, 4)}`,
+      risk_level: "medium",
+      dexs: ["All"],
       multiple_wallet: 1,
       wallet_purchase_num: 1,
-      remaining_sol_value: 0.2,
+      remaining_sol_value: 0.1,
       is_first_purchase_enabled: true,
       is_follow_sell_enabled: true,
       is_sync_rebalance_enabled: true,
@@ -93,19 +93,21 @@ const monKAddCopy = async (address: string) => {
       is_exclude_amm_enabled: true,
       is_dev_create_pool: true,
       sell: {
+        migration_clearance: true,
+        price_invariable_second: 30,
         tranche_sell_strategy: {
-          stage_stay_seconds: 2,
-          not_entered_tranche_seconds: 3,
+          stage_stay_seconds: 5,
+          not_entered_tranche_seconds: 15,
         },
       },
-      pvp: { is_enabled: true, sell_interval: 3, limit_time: 18000 },
+      pvp: { is_enabled: true, sell_interval: 18000, limit_time: 86400 },
       purchase: {
-        pump: [{ tip: 0.01, slippage: 20, input_sol: 1, priority_fee: 20 }],
-        amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
-        heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+        pump: [{ input_sol: 1.2, tip: 0.01, slippage: 20, priority_fee: 30 }],
+        amm: [{ input_sol: 0.01, tip: 0.0001, slippage: 5 }],
+        heaven: [{ input_sol: 0.001, tip: 0.0001, slippage: 5 }],
       },
       tranche_based_strategy: [
-        { reduce_stock: 30, profit_percent: 15, stop_loss_percent: 10 },
+        { profit_percent: 35, stop_loss_percent: 50, reduce_stock: 30 },
       ],
       transation_sell: { tip: 0.0002, service: "ZeroSlot", priority_fee: 1 },
     },
@@ -120,7 +122,7 @@ const monKAddCopy = async (address: string) => {
         apikey:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
         authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTcxMjcwMDN9.acj11iPJAfeoX4-KN6shovt0MGAntR7sJz9_VI6Lgv8",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTczMDc3MzV9.iEoBG1iKs0WJFVlF2eHB37vyGdsxoR_dFyUAIRZCb_I",
       },
     }
   );
@@ -216,7 +218,8 @@ const getTradewizCopies = async () => {
       "https://copy.fastradewiz.com/api/v1/getCopyTradingList",
       {
         headers: {
-          authorization: "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
+          authorization:
+            "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
         },
       }
     );
@@ -241,7 +244,8 @@ const getTradewizCopies = async () => {
 
 const delTradewizCopy = async (id: string) => {
   await axios.post(
-    `https://copy.fastradewiz.com/api/v1/deleteCopyTrading/${id}`,{},
+    `https://copy.fastradewiz.com/api/v1/deleteCopyTrading/${id}`,
+    {},
     {
       headers: {
         authorization:
