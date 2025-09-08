@@ -155,7 +155,7 @@ const tradewizAddCopy = async (address: string) => {
       },
       pvp: { is_enabled: true, sell_interval: 2, limit_time: 60 },
       purchase: {
-        pump: [{ tip: 0.005, slippage: 13, input_sol: 0.5, priority_fee: 15 }],
+        pump: [{ tip: 0.005, slippage: 13, input_sol: 0.65, priority_fee: 15 }],
         amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
         heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
       },
