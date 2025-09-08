@@ -16,7 +16,7 @@ const CACHE_FILE = "./followConfigs.json";
 const WALLET_STATS_FILE = "./walletStats.json";
 const PORT = 8125;
 let monkeyApiKey =
-  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTczOTQwNTN9.iuViKf46DT_gKsdEYPJVzjZwx_kdGkg313GP3j8EtIQ";
+  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTc0MjkxODN9.y4W-EB3Vo6CfVEHY1s5SAqJwIBqdXo6YIb5v9TUHfkk";
 const endpoints = ["http://57.129.64.141:10000"];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
