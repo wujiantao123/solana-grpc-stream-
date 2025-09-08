@@ -408,6 +408,7 @@ async function handleTransaction(result: any) {
       if (peddingWallets[addr]) {
         clearTimeout(peddingWallets[addr]);
         delete peddingWallets[addr];
+        delete walletStats[addr];
         console.log("❌ 取消延时跟单:", addr);
       }
     }
@@ -429,7 +430,7 @@ async function handleTransaction(result: any) {
         ).catch(console.error);
       }
       if (await isNewWallet(toAddr, hash)) {
-        if (tx.amount > 1) {
+        if (tx.amount > 1 && tx.amount < 3.5) {
           console.log("💸等待1小时执行", toAddr);
           peddingWallets[toAddr] = setTimeout(() => {
             if (followConfigs[toAddr]) return;
