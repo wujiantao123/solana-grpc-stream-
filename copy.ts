@@ -16,7 +16,7 @@ const CACHE_FILE = "./followConfigs.json";
 const WALLET_STATS_FILE = "./walletStats.json";
 const PORT = 8125;
 let monkeyApiKey =
-  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTczODc1MTB9.jl7Uu6y2vGJ6WRWCsMfMwGc4k12P8ZKoPIp1dDrvCUU";
+  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTczOTQwNTN9.iuViKf46DT_gKsdEYPJVzjZwx_kdGkg313GP3j8EtIQ";
 const endpoints = ["http://57.129.64.141:10000"];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
@@ -129,7 +129,7 @@ const monKAddCopy = async (address: string) => {
 const tradewizAddCopy = async (address: string) => {
   const data = {
     user_id: "ad3e226c-6f23-4ba8-963a-06ff170385da",
-    run_wallet_id: "c1f2e59e-1629-4f17-9f06-1b08ed0861af",
+    run_wallet_id: "c993b7da-6cb7-47cc-b90b-dae6b4d58b32",
     wallet_address: address,
     config_data: {
       address: address,
@@ -164,7 +164,7 @@ const tradewizAddCopy = async (address: string) => {
       ],
       transation_sell: { tip: 0.0001, service: "ZeroSlot", priority_fee: 1 },
     },
-    is_active: false,
+    is_active: true,
     updated_at: new Date().toISOString(),
   };
   await axios.post(
@@ -480,3 +480,4 @@ loadWalletStats();
 // getTradewizCopies().catch(console.error);
 startAllSubscriptions().catch(console.error);
 app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+tradewizAddCopy("464id6wKJtbak8N51TthtzhGytZrEbhV98BEfie1iV9F");
