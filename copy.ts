@@ -11,12 +11,12 @@ import {
   SubscribeRequest,
 } from "helius-laserstream";
 import sendMessage from "./sendMessage.js";
-let isProcessing = false;
 // ----------------- 配置 -----------------
 const CACHE_FILE = "./followConfigs.json";
 const WALLET_STATS_FILE = "./walletStats.json";
 const PORT = 8125;
-
+let monkeyApiKey =
+  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTczODc1MTB9.jl7Uu6y2vGJ6WRWCsMfMwGc4k12P8ZKoPIp1dDrvCUU";
 const endpoints = ["http://57.129.64.141:10000"];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
@@ -121,126 +121,100 @@ const monKAddCopy = async (address: string) => {
       headers: {
         apikey:
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
-        authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTczMDc3MzV9.iEoBG1iKs0WJFVlF2eHB37vyGdsxoR_dFyUAIRZCb_I",
+        authorization: monkeyApiKey,
       },
     }
   );
 };
 const tradewizAddCopy = async (address: string) => {
   const data = {
-    tag: `交易所_${address.slice(0, 4)}`,
-    target: address,
-    id: "",
-    autoSell: true,
-    autoSellParams: '{"settings":{"1500":2000,"3500":8000,"-200":10000}}',
-    autoSellTime: 0,
-    buyTimes: -1,
-    buyTimesResetAfterSold: false,
-    copySell: true,
-    enableMev: 0,
-    enableMevSell: 0,
-    enableTrailingStop: false,
-    enableTurbo: false,
-    enabled: true,
-    firstSellPercent: 0,
-    ignoreUnburnedLpTokens: false,
-    ignoreUnrenouncedLpTokens: false,
-    jitoFee: 7000000,
-    jitoFeeSell: 0,
-    lowerLimitOfOneTransaction: 600000000,
-    upperLimitOfOneTransaction: 600000000,
-    totalUpperLimit: 650000000,
-    maxMc: 8000,
-    minMc: -1,
-    maxTokenAge: 600,
-    minTokenAge: -1,
-    minLp: -1,
-    notCopyPositionAddition: false,
-    notifyNoHolding: false,
-    onlySell: false,
-    priorityFee: 1000000,
-    priorityFeeSell: 500000,
-    pumpfunSlippageTimes: 18,
-    ratio: 100,
-    retryTimes: 0,
-    sellByPositionProportion: true,
-    slippage: 18,
-    slippageSell: 30,
-    slippagePumpSell: 30,
-    targetSolMaxBuy: -1,
-    targetSolMinBuy: -1,
-    trailingStopActivationBps: 0,
-    trailingStopBps: 0,
-    copyPumpfun: true,
-    copyRaydiumLaunchlab: false,
-    copyRaydium: false,
-    copyRaydiumCpmm: false,
-    copyRaydiumClmm: false,
-    copyMeteora: false,
-    copyMeteoraDbc: false,
-    copyMeteoraDyn: false,
-    copyMeteoraDammv2: false,
-    copyPumpamm: false,
-    copyJupiterAggregator: false,
-    copyMoonshot: false,
-    copyBoopfun: false,
-    copyGavel: false,
-    copyVertigo: false,
-    copyPancake: false,
-    copyHeaven: false,
-    copyOkxAggregator: false,
-    copyOrca: false,
-    activeStartTime: -1,
-    activeEndTime: -1,
+    user_id: "ad3e226c-6f23-4ba8-963a-06ff170385da",
+    run_wallet_id: "c1f2e59e-1629-4f17-9f06-1b08ed0861af",
+    wallet_address: address,
+    config_data: {
+      address: address,
+      remarks: `00-dev-${address.slice(0, 4)}`,
+      risk_level: "medium",
+      dexs: ["All"],
+      multiple_wallet: 1,
+      wallet_purchase_num: 1,
+      remaining_sol_value: 0.1,
+      is_first_purchase_enabled: true,
+      is_follow_sell_enabled: false,
+      is_sync_rebalance_enabled: true,
+      is_safe: false,
+      is_exclude_pump_enabled: false,
+      is_exclude_amm_enabled: true,
+      is_dev_create_pool: true,
+      sell: {
+        migration_clearance: true,
+        tranche_sell_strategy: {
+          stage_stay_seconds: 1,
+          not_entered_tranche_seconds: 1,
+        },
+      },
+      pvp: { is_enabled: true, sell_interval: 2, limit_time: 60 },
+      purchase: {
+        pump: [{ tip: 0.005, slippage: 13, input_sol: 0.5, priority_fee: 15 }],
+        amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+        heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+      },
+      tranche_based_strategy: [
+        { reduce_stock: 30, profit_percent: 15, stop_loss_percent: 50 },
+      ],
+      transation_sell: { tip: 0.0001, service: "ZeroSlot", priority_fee: 1 },
+    },
+    is_active: false,
+    updated_at: new Date().toISOString(),
   };
   await axios.post(
-    "https://copy.fastradewiz.com/api/v1/upsertCopyTrading",
+    "https://ststoebkbdbqhlfyttjr.supabase.co/rest/v1/smart_wallets?on_conflict=user_id%2Crun_wallet_id%2Cwallet_address&select=*",
     data,
     {
       headers: {
-        authorization:
-          "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
+        apikey:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
+        authorization: monkeyApiKey,
       },
     }
   );
 };
 
-const getTradewizCopies = async () => {
-  if (isProcessing) {
-    console.log("⏳ 已有一个任务在处理，跳过本次调用");
-    return;
-  }
+// const getTradewizCopies = async () => {
+//   if (isProcessing) {
+//     console.log("⏳ 已有一个任务在处理，跳过本次调用");
+//     return;
+//   }
 
-  isProcessing = true;
-  try {
-    const response = await axios.get(
-      "https://copy.fastradewiz.com/api/v1/getCopyTradingList",
-      {
-        headers: {
-          authorization:
-            "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
-        },
-      }
-    );
+//   isProcessing = true;
+//   try {
+//     const response = await axios.get(
+//       "https://copy.fastradewiz.com/api/v1/getCopyTradingList",
+//       {
+//         headers: {
+//           authorization:
+//             "Bearer Pvv46lon5qH3C8C2VNda0AWMZVX364yOVWvxWkvBAwfMg8OQD7LxQj4R0iqOAO3rEOuPFf2gwU2Xp3YbvLcGgjdGiqzRF6yBsVlsIvgXiS36Q6FbykG62OTtKth3hJ/vDraQ6yPPjrFm/5ElpZggEiXSJ9LydgWbFRzR/MCV7kXdrXbpDnBGZjEra/0IgRlqV4AfdmT1QWD3oLv/TfZ7AGKACLGSb8JDCra6DGIRnag878UccDdeSrwX6rqPnYcUGnP2xnXrYkMlX7uDVT+kA02qr4DZqOtGkG6bR9FuLZ11JyIXClb5Spazegt2VH2tIN7QGb5AWVjnSfRhoGaXDQ==",
+//         },
+//       }
+//     );
 
-    const cexTarget = response.data.data.list.filter((item: any) =>
-      item.tag?.startsWith("交易所_")
-    );
+//     const cexTarget = response.data.data.list.filter((item: any) =>
+//       item.tag?.startsWith("交易所_")
+//     );
 
-    while (cexTarget.length > 250) {
-      const index = Math.floor(Math.random() * cexTarget.length);
-      await delTradewizCopy(cexTarget[index].id);
-      cexTarget.splice(index, 1);
-    }
+//     while (cexTarget.length > 250) {
+//       const index = Math.floor(Math.random() * cexTarget.length);
+//       await delTradewizCopy(cexTarget[index].id);
+//       cexTarget.splice(index, 1);
+//     }
 
-    console.log("✅ 清理完成");
-  } catch (err) {
-    console.error("❌ getTradewizCopies 出错:", err);
-  } finally {
-    isProcessing = false;
-  }
-};
+//     console.log("✅ 清理完成");
+//   } catch (err) {
+//     console.error("❌ getTradewizCopies 出错:", err);
+//   } finally {
+//     isProcessing = false;
+//   }
+// };
 
 const delTradewizCopy = async (id: string) => {
   await axios.post(
@@ -414,10 +388,6 @@ async function handleTransaction(result: any) {
     }
     return;
   }
-  if (accountKeys.includes("7HeD6sLLqAnKVRuSfc1Ko3BSPMNKWgGTiWLKXJF31vKM")) {
-    console.log("Bloom 交易发生", hash, accountKeys);
-    return;
-  }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
@@ -498,9 +468,15 @@ app.get("/testapi/list", (_req: Request, res: Response) => {
   res.json(followConfigs);
 });
 
+app.post("/testapi/monkey", (req: Request, res: Response) => {
+  const { apiKey } = req.body;
+  if (!apiKey) return res.status(400).json({ error: "缺少参数" });
+  monkeyApiKey = apiKey;
+  res.json({ success: true });
+});
 // ----------------- 启动 -----------------
 loadCache();
 loadWalletStats();
-getTradewizCopies().catch(console.error);
+// getTradewizCopies().catch(console.error);
 startAllSubscriptions().catch(console.error);
 app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));

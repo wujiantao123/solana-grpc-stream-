@@ -55,6 +55,11 @@
         <input type="number" id="addTimes" placeholder="Times" min="1">
         <button onclick="addFollow()">Add</button>
     </div>
+    <div>
+        <h3>Api Key</h3>
+        <input type="text" id="apiKey" placeholder="Api Key">
+        <button onclick="setApiKey()">Set</button>
+    </div>
 
     <div>
         <h3>Current Follow List</h3>
@@ -123,6 +128,23 @@
                     <td><button class="delete-btn" onclick="removeFollow('${addr}')">Delete</button></td>
                 `;
                 tbody.appendChild(row);
+            }
+        }
+        async function setApiKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) return alert('Please enter Api Key');
+
+            const res = await fetch(`${API_BASE}/monkey`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Api Key set successfully');
+                document.getElementById('apiKey').value = '';
+            } else {
+                alert(data.error);
             }
         }
 
