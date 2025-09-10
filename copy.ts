@@ -18,7 +18,7 @@ const WALLET_STATS_FILE = "./walletStats.json";
 const PORT = 8125;
 const user_id = "ad3e226c-6f23-4ba8-963a-06ff170385da";
 let monkeyApiKey =
-  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTc1ODAwMjV9.QG9NBPgMc-JuDLIE-TDZQnmrwyP-bMK5hV_CNfsSPBw";
+  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTc1OTI1NDV9.hO6tbqr8VXmlIqdL7Xgq8kbUz6XZdqenoZWyeh_mQbo";
 const endpoints = ["http://57.129.64.141:10000"];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
