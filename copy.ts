@@ -11,12 +11,14 @@ import {
   SubscribeRequest,
 } from "helius-laserstream";
 import sendMessage from "./sendMessage.js";
+const run_wallet_id = "c993b7da-6cb7-47cc-b90b-dae6b4d58b32";
 // ----------------- 配置 -----------------
 const CACHE_FILE = "./followConfigs.json";
 const WALLET_STATS_FILE = "./walletStats.json";
 const PORT = 8125;
+const user_id = "ad3e226c-6f23-4ba8-963a-06ff170385da";
 let monkeyApiKey =
-  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTc0MjkxODN9.y4W-EB3Vo6CfVEHY1s5SAqJwIBqdXo6YIb5v9TUHfkk";
+  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZDNlMjI2Yy02ZjIzLTRiYTgtOTYzYS0wNmZmMTcwMzg1ZGEiLCJleHAiOjE3NTc1ODAwMjV9.QG9NBPgMc-JuDLIE-TDZQnmrwyP-bMK5hV_CNfsSPBw";
 const endpoints = ["http://57.129.64.141:10000"];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
@@ -74,14 +76,14 @@ function saveWalletStats() {
 // ----------------- 工具函数 -----------------
 const monKAddCopy = async (address: string) => {
   const data = {
-    user_id: "ad3e226c-6f23-4ba8-963a-06ff170385da",
-    run_wallet_id: "c1f2e59e-1629-4f17-9f06-1b08ed0861af",
+    user_id: user_id,
+    run_wallet_id: run_wallet_id,
     wallet_address: address,
     config_data: {
       address: address,
       remarks: `特殊转账跟单_${address.slice(0, 4)}`,
       risk_level: "medium",
-      dexs: ["All"],
+      dexs: ["Pump"],
       multiple_wallet: 1,
       wallet_purchase_num: 1,
       remaining_sol_value: 0.1,
@@ -134,6 +136,59 @@ const tradewizAddCopy = async (address: string) => {
     config_data: {
       address: address,
       remarks: `00-dev-${address.slice(0, 4)}`,
+      risk_level: "medium",
+      dexs: ["All"],
+      multiple_wallet: 1,
+      wallet_purchase_num: 1,
+      remaining_sol_value: 0.1,
+      is_first_purchase_enabled: true,
+      is_follow_sell_enabled: false,
+      is_sync_rebalance_enabled: true,
+      is_safe: false,
+      is_exclude_pump_enabled: false,
+      is_exclude_amm_enabled: true,
+      is_dev_create_pool: true,
+      sell: {
+        migration_clearance: true,
+        tranche_sell_strategy: {
+          stage_stay_seconds: 1,
+          not_entered_tranche_seconds: 1,
+        },
+      },
+      pvp: { is_enabled: true, sell_interval: 2, limit_time: 60 },
+      purchase: {
+        pump: [{ tip: 0.005, slippage: 13, input_sol: 0.65, priority_fee: 15 }],
+        amm: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+        heaven: [{ tip: 0.001, slippage: 10, input_sol: 0.01 }],
+      },
+      tranche_based_strategy: [
+        { reduce_stock: 30, profit_percent: 15, stop_loss_percent: 50 },
+      ],
+      transation_sell: { tip: 0.0001, service: "ZeroSlot", priority_fee: 1 },
+    },
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  };
+  await axios.post(
+    "https://ststoebkbdbqhlfyttjr.supabase.co/rest/v1/smart_wallets?on_conflict=user_id%2Crun_wallet_id%2Cwallet_address&select=*",
+    data,
+    {
+      headers: {
+        apikey:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3RvZWJrYmRicWhsZnl0dGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0NzQwMzksImV4cCI6MjA2ODA1MDAzOX0._bNrkKpLm4vd41LuidWhxqtkzrS01ra43khsX9JexXs",
+        authorization: monkeyApiKey,
+      },
+    }
+  );
+};
+const dexAddCopy = async (address: string) => {
+  const data = {
+    user_id: "ad3e226c-6f23-4ba8-963a-06ff170385da",
+    run_wallet_id: "c993b7da-6cb7-47cc-b90b-dae6b4d58b32",
+    wallet_address: address,
+    config_data: {
+      address: address,
+      remarks: `dex-dev-${address.slice(0, 4)}`,
       risk_level: "medium",
       dexs: ["All"],
       multiple_wallet: 1,
@@ -400,7 +455,7 @@ async function handleTransaction(result: any) {
         ).catch(console.error);
       }
       if (await isNewWallet(toAddr, hash)) {
-        if (tx.amount > 1 && tx.amount < 3.5) {
+        if (tx.amount >= 1 && tx.amount < 2.5) {
           console.log("💸等待1小时执行", toAddr);
           peddingWallets[toAddr] = setTimeout(() => {
             if (followConfigs[toAddr]) return;
@@ -413,6 +468,7 @@ async function handleTransaction(result: any) {
             };
             walletStats[toAddr].transfers++;
             saveWalletStats();
+            tradewizAddCopy(toAddr).catch(console.error);
             delete peddingWallets[toAddr];
           }, 50 * 60 * 1000);
         }
