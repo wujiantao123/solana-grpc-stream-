@@ -468,7 +468,7 @@ async function handleTransaction(result: any) {
             };
             walletStats[toAddr].transfers++;
             saveWalletStats();
-            tradewizAddCopy(toAddr).catch(console.error);
+            // tradewizAddCopy(toAddr).catch(console.error);
             delete peddingWallets[toAddr];
           }, 50 * 60 * 1000);
         }
