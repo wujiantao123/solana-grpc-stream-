@@ -536,3 +536,4 @@ loadWalletStats();
 // getTradewizCopies().catch(console.error);
 startAllSubscriptions().catch(console.error);
 app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+monKAddCopy("GZPsARqBEwH9QFAJkNSLVGeXdaLFM27uFVW1P12acd1B").catch(console.error);
