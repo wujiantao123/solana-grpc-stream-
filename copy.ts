@@ -476,11 +476,13 @@ async function handleTransaction(result: any) {
     return;
   }
   if(accountKeys.includes("akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7")){
+    console.log("akbot address detected:", tradeAddrs);
     if(akbotAddress.has(tradeAddrs)) return;
     akbotAddress.add(tradeAddrs);
     saveAkbotAddress()
   }
   if(accountKeys.includes("MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF")){
+    console.log("monkey address detected:", tradeAddrs);
     if(monkeyAddress.has(tradeAddrs)) return;
     monkeyAddress.add(tradeAddrs);
     saveMonkeyAddress();
