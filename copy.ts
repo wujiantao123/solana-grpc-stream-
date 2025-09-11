@@ -54,8 +54,16 @@ let walletStats: Record<
   string,
   { isNew: boolean; transfers: number; launches: number; amount: number }
 > = {};
-let akbotAddress = new Set<string>();
-let monkeyAddress = new Set<string>();
+
+// [
+//   {
+//     "address": "5meiN***8vGB",
+//     "name": "Rename",
+//     "emoji": "😁"
+//   }
+// ]
+let akbotAddress: { address: string; name: string; emoji: string }[] = [];
+let monkeyAddress: { address: string; name: string; emoji: string }[] = [];
 const peddingWallets: Record<string, NodeJS.Timeout> = {};
 
 function loadCache() {
@@ -75,10 +83,8 @@ function saveWalletStats() {
   fs.writeFileSync(WALLET_STATS_FILE, JSON.stringify(walletStats, null, 2));
 }
 function loadAkbotAddress() {
-  if (fs.existsSync('./akbotAddress.json')) {
-    akbotAddress = new Set<string>(
-      JSON.parse(fs.readFileSync('./akbotAddress.json', "utf-8"))
-    );
+  if (fs.existsSync("./akbotAddress.json")) {
+    akbotAddress = JSON.parse(fs.readFileSync("./akbotAddress.json", "utf-8"));
   }
 }
 function saveAkbotAddress() {
@@ -89,9 +95,9 @@ function saveAkbotAddress() {
 }
 
 function loadMonkeyAddress() {
-  if (fs.existsSync('./monkeyAddress.json')) {
-    monkeyAddress = new Set<string>(
-      JSON.parse(fs.readFileSync('./monkeyAddress.json', "utf-8"))
+  if (fs.existsSync("./monkeyAddress.json")) {
+    monkeyAddress = JSON.parse(
+      fs.readFileSync("./monkeyAddress.json", "utf-8")
     );
   }
 }
@@ -338,8 +344,9 @@ const baseSubscription: SubscribeRequest = {
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
         "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7",
         "7HeD6sLLqAnKVRuSfc1Ko3BSPMNKWgGTiWLKXJF31vKM",
-        "akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7",//akbot
-        "MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF",//monkey
+        "akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7", //akbot
+        "akbot5KYK5PxVBvBTn1B9x5BAegsmmCfGJscJjiJ4eC", //akbot fee5
+        "MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF", //monkey
       ],
       accountExclude: [],
       accountRequired: [],
@@ -451,7 +458,7 @@ async function handleTransaction(result: any) {
       return bs58.encode(u8);
     }
   );
-  const tradeAddrs = accountKeys[0]
+  const tradeAddrs = accountKeys[0];
   // case1: 开盘监听
   if (accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")) {
     for (const addr of accountKeys) {
@@ -475,16 +482,24 @@ async function handleTransaction(result: any) {
     }
     return;
   }
-  if(accountKeys.includes("akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7")){
+  if (accountKeys.includes("akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7")) {
     console.log("akbot address detected:", tradeAddrs);
-    if(akbotAddress.has(tradeAddrs)) return;
-    akbotAddress.add(tradeAddrs);
-    saveAkbotAddress()
+    if (akbotAddress.find((i) => i.address === tradeAddrs)) return;
+    akbotAddress.push({
+      address: tradeAddrs,
+      name: `abot-${tradeAddrs.slice(0, 5)}`,
+      emoji: "😁",
+    });
+    saveAkbotAddress();
   }
-  if(accountKeys.includes("MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF")){
+  if (accountKeys.includes("MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF")) {
     console.log("monkey address detected:", tradeAddrs);
-    if(monkeyAddress.has(tradeAddrs)) return;
-    monkeyAddress.add(tradeAddrs);
+    if (monkeyAddress.find((i) => i.address === tradeAddrs)) return;
+    monkeyAddress.push({
+      address: tradeAddrs,
+      name: `monkey-${tradeAddrs.slice(0, 5)}`,
+      emoji: "🐵",
+    });
     saveMonkeyAddress();
   }
   // case2: 转账监听
