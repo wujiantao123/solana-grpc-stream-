@@ -54,6 +54,8 @@ let walletStats: Record<
   string,
   { isNew: boolean; transfers: number; launches: number; amount: number }
 > = {};
+let akbotAddress = new Set<string>();
+let monkeyAddress = new Set<string>();
 const peddingWallets: Record<string, NodeJS.Timeout> = {};
 
 function loadCache() {
@@ -71,6 +73,33 @@ function loadWalletStats() {
 }
 function saveWalletStats() {
   fs.writeFileSync(WALLET_STATS_FILE, JSON.stringify(walletStats, null, 2));
+}
+function loadAkbotAddress() {
+  if (fs.existsSync('./akbotAddress.json')) {
+    akbotAddress = new Set<string>(
+      JSON.parse(fs.readFileSync('./akbotAddress.json', "utf-8"))
+    );
+  }
+}
+function saveAkbotAddress() {
+  fs.writeFileSync(
+    "./akbotAddress.json",
+    JSON.stringify(Array.from(akbotAddress), null, 2)
+  );
+}
+
+function loadMonkeyAddress() {
+  if (fs.existsSync('./monkeyAddress.json')) {
+    monkeyAddress = new Set<string>(
+      JSON.parse(fs.readFileSync('./monkeyAddress.json', "utf-8"))
+    );
+  }
+}
+function saveMonkeyAddress() {
+  fs.writeFileSync(
+    "./monkeyAddress.json",
+    JSON.stringify(Array.from(monkeyAddress), null, 2)
+  );
 }
 
 // ----------------- 工具函数 -----------------
@@ -309,6 +338,8 @@ const baseSubscription: SubscribeRequest = {
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
         "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7",
         "7HeD6sLLqAnKVRuSfc1Ko3BSPMNKWgGTiWLKXJF31vKM",
+        "akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7",//akbot
+        "MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF",//monkey
       ],
       accountExclude: [],
       accountRequired: [],
@@ -420,6 +451,7 @@ async function handleTransaction(result: any) {
       return bs58.encode(u8);
     }
   );
+  const tradeAddrs = accountKeys[0]
   // case1: 开盘监听
   if (accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")) {
     for (const addr of accountKeys) {
@@ -442,6 +474,16 @@ async function handleTransaction(result: any) {
       }
     }
     return;
+  }
+  if(accountKeys.includes("akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7")){
+    if(akbotAddress.has(tradeAddrs)) return;
+    akbotAddress.add(tradeAddrs);
+    saveAkbotAddress()
+  }
+  if(accountKeys.includes("MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF")){
+    if(monkeyAddress.has(tradeAddrs)) return;
+    monkeyAddress.add(tradeAddrs);
+    saveMonkeyAddress();
   }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
@@ -533,7 +575,8 @@ app.post("/testapi/monkey", (req: Request, res: Response) => {
 // ----------------- 启动 -----------------
 loadCache();
 loadWalletStats();
+loadAkbotAddress();
+loadMonkeyAddress();
 // getTradewizCopies().catch(console.error);
 startAllSubscriptions().catch(console.error);
 app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
-monKAddCopy("GZPsARqBEwH9QFAJkNSLVGeXdaLFM27uFVW1P12acd1B").catch(console.error);
