@@ -355,8 +355,8 @@ const baseSubscription: SubscribeRequest = {
   transactions: {
     client: {
       accountInclude: [
-        "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
-        "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+        // "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
+        // "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
         "EgrfLBwkto7y18QPKJu4sXSW2qGPAbXAWvKfyPeV9U7",
         "7HeD6sLLqAnKVRuSfc1Ko3BSPMNKWgGTiWLKXJF31vKM",
@@ -364,6 +364,7 @@ const baseSubscription: SubscribeRequest = {
         "akbot5KYK5PxVBvBTn1B9x5BAegsmmCfGJscJjiJ4eC", //akbot fee5
         "MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF", //monkey
         "9KEpWPRpqjJHgCcCP7uZrEkC3tWGecPrUFbkdSesCQEk",//stark fee
+        "GCRJD52pGwcCSs4oswYxTBCPatxY1P6WpxCC9R9zty6r",// dev project
       ],
       accountExclude: [],
       accountRequired: [],
@@ -541,10 +542,10 @@ async function handleTransaction(result: any) {
         ).catch(console.error);
       }
       if (await isNewWallet(toAddr, hash)) {
-        if (tx.amount >= 1 && tx.amount < 2.5) {
+        if (tx.amount >= 1 && tx.amount < 2) {
           console.log("💸等待1小时执行", toAddr);
-          peddingWallets[toAddr] = setTimeout(() => {
-            if (followConfigs[toAddr]) return;
+          // peddingWallets[toAddr] = setTimeout(() => {
+          //   if (followConfigs[toAddr]) return;
             console.log("⏰ 延时跟单:", toAddr, walletStats[toAddr]);
             walletStats[toAddr] ??= {
               isNew: true,
@@ -556,7 +557,7 @@ async function handleTransaction(result: any) {
             saveWalletStats();
             // tradewizAddCopy(toAddr).catch(console.error);
             delete peddingWallets[toAddr];
-          }, 50 * 60 * 1000);
+          // }, 50 * 60 * 1000);
         }
       }
     }
