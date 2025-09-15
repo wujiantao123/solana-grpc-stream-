@@ -64,6 +64,7 @@ let walletStats: Record<
 // ]
 let akbotAddress: { address: string; name: string; emoji: string }[] = [];
 let monkeyAddress: { address: string; name: string; emoji: string }[] = [];
+let starkAddress: { address: string; name: string; emoji: string }[] = [];
 const peddingWallets: Record<string, NodeJS.Timeout> = {};
 
 function loadCache() {
@@ -107,6 +108,21 @@ function saveMonkeyAddress() {
     JSON.stringify(Array.from(monkeyAddress), null, 2)
   );
 }
+
+function loadStarkAddress() {
+  if (fs.existsSync("./starkAddress.json")) {
+    starkAddress = JSON.parse(
+      fs.readFileSync("./starkAddress.json", "utf-8")
+    );
+  }
+}
+function saveStarkAddress() {
+  fs.writeFileSync(
+    "./starkAddress.json",
+    JSON.stringify(Array.from(starkAddress), null, 2)
+  );
+}
+
 
 // ----------------- 工具函数 -----------------
 const monKAddCopy = async (address: string) => {
@@ -347,6 +363,7 @@ const baseSubscription: SubscribeRequest = {
         "akbot11bqMruhgoqvXAJti3UxaqfkABwRgnK3ZA41L7", //akbot
         "akbot5KYK5PxVBvBTn1B9x5BAegsmmCfGJscJjiJ4eC", //akbot fee5
         "MK55zHJokhriCTDoeKmDhUPtcNxDx3o5e1AMefZ4XLF", //monkey
+        "9KEpWPRpqjJHgCcCP7uZrEkC3tWGecPrUFbkdSesCQEk",//stark fee
       ],
       accountExclude: [],
       accountRequired: [],
@@ -502,6 +519,16 @@ async function handleTransaction(result: any) {
     });
     saveMonkeyAddress();
   }
+  if(accountKeys.includes("9KEpWPRpqjJHgCcCP7uZrEkC3tWGecPrUFbkdSesCQEk")){
+    console.log("stark fee address detected:", tradeAddrs);
+    if (starkAddress.find((i) => i.address === tradeAddrs)) return;
+    starkAddress.push({
+      address: tradeAddrs,
+      name: `stark-${tradeAddrs.slice(0, 5)}`,
+      emoji: "⚡",
+    });
+    saveStarkAddress();
+  }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
     if (tx.amount > 0.3 && tx.amount < 5.1) {
@@ -594,6 +621,7 @@ loadCache();
 loadWalletStats();
 loadAkbotAddress();
 loadMonkeyAddress();
+loadStarkAddress();
 // getTradewizCopies().catch(console.error);
 startAllSubscriptions().catch(console.error);
 app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
