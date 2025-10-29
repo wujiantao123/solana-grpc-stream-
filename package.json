@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node --loader ts-node/esm main.ts",
     "start2": "node --loader ts-node/esm copy.ts",
+    "start3": "node --loader ts-node/esm ema_trading.ts",
     "dev": "node --loader ts-node/esm --watch main.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
