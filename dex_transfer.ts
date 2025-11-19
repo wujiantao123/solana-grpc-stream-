@@ -9,7 +9,21 @@ import {
   LaserstreamConfig,
   SubscribeRequest,
 } from "helius-laserstream";
+import bunyan from "bunyan";
 
+const log = bunyan.createLogger({
+  name: "dex_transfer_app",
+  streams: [
+    {
+      level: "info",
+      stream: process.stdout,
+    },
+    {
+      level: "error",
+      path: "./dex_transfer_app-error.log",
+    },
+  ],
+});
 const PORT = 8125;
 
 function loadFile(filePath: string) {
@@ -56,7 +70,7 @@ async function isNewWallet(address: string, hash: string) {
     if (signatures.length === 1) return signatures[0].signature === hash;
     return false;
   } catch (e) {
-    console.error("isNewWallet error:", e);
+    log.error("isNewWallet error:", e);
     return false;
   }
 }
@@ -131,7 +145,7 @@ function bufferToUint8Array(buf: any): Uint8Array {
 async function handleTransaction(result: any) {
   if (!result?.transaction) return;
   const hash = bs58.encode(Buffer.from(result.transaction.signature));
-  console.log(new Date().toISOString(), "新交易:", hash);
+  log.debug(new Date().toISOString(), "新交易:", hash);
   const accountKeys = result.transaction.transaction.message.accountKeys.map(
     (b: any) => {
       const u8 = bufferToUint8Array(b);
@@ -143,9 +157,9 @@ async function handleTransaction(result: any) {
   if (accountKeys.includes("TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM")) {
     for (const addr of accountKeys) {
       if (launchAddress.includes(addr)) continue;
-      if(walletStats[addr]){
+      if (walletStats[addr]) {
         launchAddress.push(addr);
-        console.log("🚀检测到新钱包启动:", addr, "来自", tradeAddrs);
+        log.info("🚀检测到新钱包启动:", addr, "来自", tradeAddrs);
         saveFile(LAUNCH_STATS_FILE, launchAddress);
       }
     }
@@ -153,16 +167,12 @@ async function handleTransaction(result: any) {
   }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
-    console.log("💸 转账检测:", tx.from, "->", tx.to, tx.amount, "SOL");
+    log.debug(`💸 转账检测: ${tx.from} -> ${tx.to} ${tx.amount} SOL`);
     if (tx.amount > 0.1 && tx.amount < 10) {
       const toAddr = tx.to;
       if (await isNewWallet(toAddr, hash)) {
-        console.log(
-          "🎯检测到新钱包接收转账:",
-          toAddr,
-          tx.amount,
-          "SOL 来自",
-          tradeAddrs
+        log.info(
+          `🎯检测到新钱包接收转账: ${toAddr} ${tx.amount} SOL 来自 ${tradeAddrs}`
         );
         walletStats[toAddr] ??= {
           isNew: true,
@@ -181,16 +191,16 @@ async function startAllSubscriptions() {
     await subscribe(
       config,
       baseSubscription,
-      (data) => handleTransaction(data.transaction).catch(console.error),
-      (err) => console.error(`订阅错误 (${endpoint}):`, err)
+      (data) => handleTransaction(data.transaction).catch(log.error),
+      (err) => log.error(`订阅错误 (${endpoint}):`, err)
     );
 
-    console.log(`✅ 已连接 Laserstream 节点: ${endpoint}`);
+    log.info(`✅ 已连接 Laserstream 节点: ${endpoint}`);
   }
 }
 // ----------------- HTTP API -----------------
 const app = express();
 app.use(cors());
 app.use(express.json());
-startAllSubscriptions().catch(console.error);
-app.listen(PORT, () => console.log(`🚀 服务已启动: http://localhost:${PORT}`));
+startAllSubscriptions().catch(log.error);
+app.listen(PORT, () => log.info(`🚀 服务已启动: http://localhost:${PORT}`));

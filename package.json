@@ -21,12 +21,14 @@
     "@types/cors": "^2.8.19",
     "axios": "^1.11.0",
     "bs58": "^6.0.0",
+    "bunyan": "^1.8.15",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "express": "^5.1.0",
     "helius-laserstream": "^0.1.2"
   },
   "devDependencies": {
+    "@types/bunyan": "^1.8.11",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
     "ts-node": "^10.9.2",
