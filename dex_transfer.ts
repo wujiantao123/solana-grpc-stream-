@@ -29,7 +29,7 @@ const endpoints = [
   "http://84.32.103.140:10030",
   "http://84.32.103.140:10040",
   "http://84.32.103.140:10090",
-  "http://va.rpc.onyxnodes.com:10000",
+  // "http://va.rpc.onyxnodes.com:10000",
 ];
 const rpcs = [
   "https://mainnet.helius-rpc.com/?api-key=8b7d781c-41a4-464a-9c28-d243fa4b4490",
@@ -153,6 +153,7 @@ async function handleTransaction(result: any) {
   }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
+    console.log("💸 转账检测:", tx.from, "->", tx.to, tx.amount, "SOL");
     if (tx.amount > 0.1 && tx.amount < 10) {
       const toAddr = tx.to;
       if (await isNewWallet(toAddr, hash)) {
