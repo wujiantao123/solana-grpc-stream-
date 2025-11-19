@@ -28,7 +28,6 @@ const log = bunyan.createLogger({
     },
   ],
 });
-log.info("🚀 dex_transfer_app 启动中...");
 const PORT = 8125;
 
 function loadFile(filePath: string) {
@@ -89,6 +88,11 @@ const baseSubscription: SubscribeRequest = {
         "2AQdpHJ2JpcEgPiATUXjQxA8QmafFegfQwSLWSprPicm",
         "GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE",
         "DPqsobysNf5iA9w7zrQM8HLzCKZEDMkZsWbiidsAt1xo",
+        "2ojv9BAiHUrvsm9gxDe7fJSzbNZSJcxZvf8dqmWGHG8S",
+        "5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9",
+        "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+        "3gd3dqgtJ4jWfBfLYTX67DALFetjc5iS72sCgRhCkW2u",
+        "6QJzieMYfp7yr3EdrePaQoG3Ghxs2wM98xSLRu8Xh56U",
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
       ],
       accountExclude: [],
