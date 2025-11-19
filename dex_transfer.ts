@@ -16,7 +16,11 @@ const log = bunyan.createLogger({
   streams: [
     {
       level: "info",
-      stream: process.stdout,
+      path: "./dex_transfer_app.log",
+    },
+    {
+      level: "debug",
+      path: "./dex_transfer_app-debug.log",
     },
     {
       level: "error",
@@ -24,6 +28,7 @@ const log = bunyan.createLogger({
     },
   ],
 });
+log.info("🚀 dex_transfer_app 启动中...");
 const PORT = 8125;
 
 function loadFile(filePath: string) {
