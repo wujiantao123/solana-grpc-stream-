@@ -167,7 +167,7 @@ async function handleTransaction(result: any) {
   }
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
-    log.debug(`💸 转账检测: ${tx.from} -> ${tx.to} ${tx.amount} SOL`);
+    log.debug(`💸 转账检测: ${hash} ${tx.from} -> ${tx.to} ${tx.amount} SOL`);
     if (tx.amount > 0.1 && tx.amount < 10) {
       const toAddr = tx.to;
       if (await isNewWallet(toAddr, hash)) {
