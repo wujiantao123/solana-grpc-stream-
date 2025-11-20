@@ -10,6 +10,7 @@ import {
   SubscribeRequest,
 } from "helius-laserstream";
 import bunyan from "bunyan";
+import axios from "axios";
 
 const log = bunyan.createLogger({
   name: "dex_transfer_app",
@@ -143,6 +144,57 @@ function parseSolTransfers(result: any) {
   }
   return transfers;
 }
+function addSniper(toAddr: string) {
+  axios.post(
+    "https://copy.fastradewiz.com/api/v1/sniper/upsert",
+    {
+      tag: toAddr.slice(0, 6),
+      platformMask: 7,
+      tickerExact: "",
+      tickerFuzzy: "",
+      devAddress: toAddr,
+      requireTwitter: false,
+      requireWebsite: false,
+      requireTelegram: false,
+      slippage: 70,
+      sellSlippage: 0.01,
+      pumpSlippage: 70,
+      pumpSellSlippage: 0.01,
+      priorityFee: 500000,
+      priorityFeeSell: 0,
+      jitoFee: 0,
+      jitoFeeSell: 0,
+      enableMev: 0,
+      enableMevSell: 0,
+      devSolMaxBuy: -1,
+      devSolMinBuy: 1000000000,
+      enabled: true,
+      publicKey: "2eB41ffTHiyneh4q9DN2XZtE7fvFMQJ21GNNaExNNJTq",
+      solAvailable: 2000000000,
+      solAmount: 100000000,
+      minDevHoldingBps: -1,
+      maxDevHoldingBps: -1,
+      enableAutoSell: false,
+      autoSellParams: '{"settings": {}}',
+      enableTrailingStop: false,
+      trailingStopActivationBps: 0,
+      trailingStopBps: 0,
+      autoSellDuration: 0,
+      enableDevSell: false,
+      devSellType: 0,
+      devSellBps: 10000,
+      triggerDuration: 7,
+      triggerDurationBps: 10000,
+      enableTriggerDuration: true,
+    },
+    {
+      headers: {
+        authorization:
+          "Bearer l87lfHJBZb5N+5Eoz1hwXzX72QWAIHzGcuZ2HXnfalaVaa4Hj5E06QIi8WVGcC9WXlpKCuR8z0dLEVwJP5JUXH89oB88BdiTs6Qe8mMMvOyqPkhaJSZLI/zKjkRJ58hPp6g5zI/KPDmAFxL6k4KddLdZVGw19rwO6tS4y7K3QNkPOjKUgVp0XjjB/FA4051uUhvwaHceFgi5vsYhG9z1WjLB9k7s0c8Mnrmp6ZO3+Ql+myq4OVhZf6Pnq8wDjT/w+yPxD+P2jEYO81biPzoXValESpcQ4Nsgpjy19tcwEWJKj8nBTR6m7owMx2uDKE88x2hEX1YySITNeygbkE8MFg==",
+      },
+    }
+  );
+}
 
 function bufferToUint8Array(buf: any): Uint8Array {
   if (buf instanceof Uint8Array) return buf;
@@ -177,7 +229,7 @@ async function handleTransaction(result: any) {
   // case2: 转账监听
   parseSolTransfers(result).forEach(async (tx) => {
     log.debug(`💸 转账检测: ${hash} ${tx.from} -> ${tx.to} ${tx.amount} SOL`);
-    if (tx.amount > 0.1 && tx.amount < 10) {
+    if (tx.amount > 1 && tx.amount < 3.1) {
       const toAddr = tx.to;
       if (await isNewWallet(toAddr, hash)) {
         log.info(
