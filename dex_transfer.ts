@@ -239,6 +239,7 @@ async function handleTransaction(result: any) {
           isNew: true,
           amount: tx.amount,
         };
+        addSniper(toAddr);
         saveFile(WALLET_STATS_FILE, walletStats);
       }
     }
