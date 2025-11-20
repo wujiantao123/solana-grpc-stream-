@@ -145,6 +145,7 @@ function parseSolTransfers(result: any) {
   return transfers;
 }
 function addSniper(toAddr: string) {
+  console.log("添加 Sniper:", toAddr);
   axios.post(
     "https://copy.fastradewiz.com/api/v1/sniper/upsert",
     {
